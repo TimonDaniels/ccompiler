@@ -16,10 +16,4 @@ struct CurChar
     int processed;
 };
 
-struct Token
-{
-    int type;
-    int value;
-};
-
 #endif

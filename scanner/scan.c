@@ -1,4 +1,5 @@
 #include "characters.h"
+#include "token.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -12,14 +13,24 @@ static int chrpos(char *s, int c)
     return (p ? p - s : -1);
 }
 
-void nextc(FILE *file, struct CurChar *curChar)
+static void nextc(FILE *file, struct CurChar *curChar)
 {
     // read the file
     curChar->type = fgetc(file);
     curChar->processed = 0;
 }
 
-int parseInt(FILE *file, struct CurChar *curChar)
+static void skipSpaces(FILE *file, struct CurChar *curChar)
+{
+    nextc(file, curChar);
+    while (isspace(curChar->type))
+    {
+        nextc(file, curChar);
+        curChar->processed = 1;
+    }
+}
+
+static int scanInt(FILE *file, struct CurChar *curChar)
 {
     // declare variables
     int k, value = 0;
@@ -34,9 +45,9 @@ int parseInt(FILE *file, struct CurChar *curChar)
     return value;
 }
 
-int parseToken(FILE *file, struct CurChar *curChar, struct Token *token)
+int lexScan(FILE *file, struct CurChar *curChar, struct Token *token)
 {
-    nextc(file, curChar);
+    skipSpaces(file, curChar);
 
     // check the character type
     switch (curChar->type)
@@ -59,7 +70,7 @@ int parseToken(FILE *file, struct CurChar *curChar, struct Token *token)
         if (isdigit(curChar->type))
         {
             token->type = INT;
-            token->value = parseInt(file, curChar);
+            token->value = scanInt(file, curChar);
             break;
         }
 
@@ -67,33 +78,4 @@ int parseToken(FILE *file, struct CurChar *curChar, struct Token *token)
     }
 
     return 1;
-}
-
-void main()
-{
-    // declare variables
-    FILE *file;
-    struct CurChar curChar;
-    struct Token token;
-
-    // open the file
-    file = fopen("code-1.txt", "r");
-    if (file == NULL)
-    {
-        printf("Error: file not found\n");
-        return;
-    }
-
-    // read the file
-    printf("Reading the file...\n");
-    while (!feof(file))
-    {
-        parseToken(file, &curChar, &token);
-        if (token.type == INT)
-            printf("Token: %d, Value: %d\n", token.type, token.value);
-        else
-            printf("Token: %d, character: %d\n", token.type, curChar.type);
-    }
-    // close the file
-    fclose(file);
 }
