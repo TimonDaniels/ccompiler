@@ -28,7 +28,7 @@ void main()
         if (token.type == INT)
             printf("Token: %d, Value: %d\n", token.type, token.value);
         else
-            printf("Token: %d, character: %d\n", token.type, curChar.type);
+            printf("Token: %d, character: %c\n", token.type, curChar.type);
     }
     // close the file
     fclose(file);
