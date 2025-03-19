@@ -13,6 +13,12 @@ enum
 struct CurChar
 {
     char type;
+    int processed;
+};
+
+struct Token
+{
+    int type;
     int value;
 };
 
