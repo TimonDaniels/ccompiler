@@ -5,6 +5,9 @@
 #include <stdlib.h>
 #include <ctype.h>
 
+// Original work Copyright (c) 2019 Warren Toomey, GPL3
+// Modified by Timon Daniels (2025)
+
 void main()
 {
     // declare variables
