@@ -1,7 +1,6 @@
 #include "characters.h"
 #include "token.h"
-#include "scan.c"
-#include "parse.c"
+#include "expresions.c"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,7 +27,8 @@ void main()
 
     // read the file
     printf("Reading the file...\n");
-    rootnode = createASTTree(file, &curChar, &token);
+    lexScan(file, &curChar, &token);
+    rootnode = binaryExpression(file, &curChar, &token, 0);
     printf("Value calculated: %d\n", intepretASTTree(rootnode));
 
     // close the file

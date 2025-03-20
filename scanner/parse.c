@@ -8,11 +8,11 @@
 
 enum nodetype
 {
+    VAL,
     ADD,
     SUB,
     MUL,
     DIV,
-    VAL,
 };
 
 int getNodeType(int op)
@@ -65,25 +65,29 @@ struct ASTnode *mkastleaf(int op, int intvalue)
     return (mkastnode(op, NULL, NULL, intvalue));
 }
 
+struct ASTnode *getNextIntNode(FILE *file, struct CurChar *curChar, struct Token *token)
+{
+    // assumes the next token is scanned and of type INT
+    struct ASTnode *left;
+    switch (token->type == INT)
+    {
+    case INT:
+        left = mkastleaf(VAL, token->value);
+        lexScan(file, curChar, token);
+        return left;
+    default:
+        printf("Error: unexpected token, expected int \n");
+        exit(1);
+    }
+}
+
 struct ASTnode *createASTTree(FILE *file, struct CurChar *curChar, struct Token *token)
 {
     struct ASTnode *new, *left, *right;
     int nodetype;
 
     lexScan(file, curChar, token);
-    if (token->type == INT)
-    {
-        left = mkastleaf(VAL, token->value);
-        lexScan(file, curChar, token);
-        if (token->type == T_EOF)
-        {
-            return (left);
-        }
-    }
-    else
-    {
-        printf("Error: unexpected token, expected int \n");
-    }
+    left = getNextIntNode(file, curChar, token);
 
     nodetype = getNodeType(token->type);
 
