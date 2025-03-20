@@ -3,6 +3,7 @@
 
 enum
 {
+    T_EOF,
     INT,
     PLUS,
     MINUS,

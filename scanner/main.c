@@ -1,6 +1,8 @@
-#include "scan.h"
 #include "characters.h"
 #include "token.h"
+#include "scan.c"
+#include "parse.c"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -14,6 +16,7 @@ void main()
     FILE *file;
     struct CurChar curChar;
     struct Token token;
+    struct ASTnode *rootnode;
 
     // open the file
     file = fopen("code-1.txt", "r");
@@ -25,14 +28,9 @@ void main()
 
     // read the file
     printf("Reading the file...\n");
-    while (!feof(file))
-    {
-        lexScan(file, &curChar, &token);
-        if (token.type == INT)
-            printf("Token: %d, Value: %d\n", token.type, token.value);
-        else
-            printf("Token: %d, character: %c\n", token.type, curChar.type);
-    }
+    rootnode = createASTTree(file, &curChar, &token);
+    printf("Value calculated: %d\n", intepretASTTree(rootnode));
+
     // close the file
     fclose(file);
 }

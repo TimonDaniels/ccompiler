@@ -51,11 +51,12 @@ static int scanInt(FILE *file, struct CurChar *curChar)
 int lexScan(FILE *file, struct CurChar *curChar, struct Token *token)
 {
     skipSpaces(file, curChar);
-
+    printf("Character: %c\n", curChar->type);
     // check the character type
     switch (curChar->type)
     {
     case EOF:
+        token->type = T_EOF;
         return 0;
     case '+':
         token->type = PLUS;
@@ -79,6 +80,5 @@ int lexScan(FILE *file, struct CurChar *curChar, struct Token *token)
 
         curChar->processed = 1;
     }
-
     return 1;
 }
