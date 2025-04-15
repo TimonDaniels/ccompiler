@@ -1,7 +1,8 @@
 #define extern_
 #include "global.h"
 #include "defs.h"
-#include "expresions.c"
+#include "gen_asm.c"
+#include "stmt.c"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,25 +14,35 @@
 void main()
 {
     // declare variables
-    FILE *file;
+    FILE *InFile;
     struct CurChar curChar;
     struct Token token;
     struct ASTnode *rootnode;
 
     // open the file
-    file = fopen("code-1.txt", "r");
-    if (file == NULL)
+    InFile = fopen("code-1.txt", "r");
+    if (InFile == NULL)
     {
-        printf("Error: file not found\n");
-        return;
+        fprintf(stderr, "Error: file not found: %s\n", strerror(errno));
+        exit(1);
+    }
+
+    Outfile = fopen("assembly.s", "w");
+    if (Outfile == NULL)
+    {
+        fprintf(stderr, "Error: could not open assembly file: %s\n", strerror(errno));
+        fclose(InFile);
+        exit(1);
     }
 
     // read the file
     printf("Reading the file...\n");
-    lexScan(file, &curChar, &token);
-    rootnode = binaryExpression(file, &curChar, &token, 0);
-    printf("Value calculated: %d\n", intepretASTTree(rootnode));
+    lexScan(InFile, &curChar, &token);
+    cgpreamble();
+    statements(InFile, &curChar, &token);
+    cgpostamble();
 
-    // close the file
-    fclose(file);
+    // close the Outfile
+    fclose(Outfile);
+    exit(0);
 }

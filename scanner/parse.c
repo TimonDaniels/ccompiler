@@ -72,6 +72,7 @@ struct ASTnode *createASTTree(FILE *file, struct CurChar *curChar, struct Token 
     lexScan(file, curChar, token);
     left = getNextIntNode(file, curChar, token);
 
+
     nodetype = getNodeType(token->type);
 
     right = createASTTree(file, curChar, token);

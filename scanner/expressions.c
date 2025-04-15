@@ -23,7 +23,7 @@ struct ASTnode *binaryExpression(FILE *file, struct CurChar *curChar, struct Tok
 
     left = getNextIntNode(file, curChar, token);
     type = token->type;
-    if (type == T_EOF)
+    if (type == T_SEMI)
     {
         return left;
     }
@@ -37,6 +37,12 @@ struct ASTnode *binaryExpression(FILE *file, struct CurChar *curChar, struct Tok
         type = token->type;
 
         current_precedense = operatorPrecedense[type];
+
+        if (type == T_SEMI)
+        {
+            return left;
+        }
+
     }
 
     return left;

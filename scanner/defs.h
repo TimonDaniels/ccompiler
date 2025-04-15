@@ -11,13 +11,13 @@
 
 // Token types
 enum {
-  T_EOF, T_INTLIT, T_PLUS, T_MINUS, T_STAR, T_SLASH,
+  T_EOF, T_INTLIT, T_PLUS, T_MINUS, T_STAR, T_SLASH, T_SEMI, T_PRINT,
 };
 
 // Token structure
 struct Token {
   int type;				    // Token type, from the enum list above
-  int value;				// For T_INTLIT, the integer value
+  int value;				  // For T_INTLIT, the integer value
 };
 
 struct CurChar

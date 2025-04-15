@@ -16,6 +16,7 @@ static int chrpos(char *s, int c)
     return (p ? p - s : -1);
 }
 
+
 static void nextc(FILE *file, struct CurChar *curChar)
 {
     // read the file
@@ -58,8 +59,47 @@ static int scanInt(FILE *file, struct CurChar *curChar)
     return value;
 }
 
+// Scan an identifier from the input file and
+// store it in buf[]. Return the identifier's length
+static int scanident(FILE *file, struct CurChar *curChar, char *buf, int lim) {
+    int i = 0;
+  
+    // Allow digits, alpha and underscores
+    while (isalpha(curChar->type) || isdigit(curChar->type) || '_' == (curChar->type)) {
+      // Error if we hit the identifier length limit,
+      // else append to buf[] and get next character
+      if (lim - 1 == i) {
+        printf("identifier too long on line %d\n", Line);
+        exit(1);
+      } else if (i < lim - 1) {
+        buf[i++] = (curChar->type);
+      }
+      nextc(file, curChar);
+    }
+    // We hit a non-valid character, put it back.
+    // NUL-terminate the buf[] and return the length
+    Putback = curChar->type;
+    buf[i] = '\0';
+    return (i);
+}
+
+// Given a word from the input, return the matching
+// keyword token number or 0 if it's not a keyword.
+// Switch on the first letter so that we don't have
+// to waste time strcmp()ing against all the keywords.
+static int keyword(char *s) {
+    switch (*s) {
+      case 'p':
+        if (!strcmp(s, "print"))
+      return (T_PRINT);
+        break;
+    }
+    return (0);
+}
+
 int lexScan(FILE *file, struct CurChar *curChar, struct Token *token)
-{
+{   
+    int tokentype;
     skipChars(file, curChar);
 
     // check the character type
@@ -80,23 +120,47 @@ int lexScan(FILE *file, struct CurChar *curChar, struct Token *token)
     case '/':
         token->type = T_SLASH;
         break;
+    case ';':
+        token->type = T_SEMI;
+        break;
     default:
-        if (isdigit(curChar->type))
-        {
-            token->type = T_INTLIT;
-            token->value = scanInt(file, curChar);
-            break;
+      // If it's a digit, scan the
+      // literal integer value in
+      if (isdigit(curChar->type)) {
+        token->value = scanInt(file, curChar);
+        token->type = T_INTLIT;
+        break;
+          } else if (isalpha(curChar->type) || '_' == curChar->type) {
+        // Read in a keyword or identifier
+        scanident(file, curChar, Text, TEXTLEN);
+    
+        // If it's a recognised keyword, return that token
+        tokentype = keyword(Text);
+        if (tokentype) {
+          token->type = tokentype;
+          break;
         }
-    }
-
-    switch (token->type)
-    {
-    case T_INTLIT:
-        printf("token: %d\n", token->value);
-        break;
-    default:
-        printf("token: %c\n", curChar->type);
-        break;
-    }
+        // Not a recognised keyword, so an error for now
+        printf("Unrecognised symbol %s on line %d\n", Text, Line);
+        exit(1);
+          }
+          // The character isn't part of any recognised token, error
+          printf("Unrecognised character %c on line %d\n", curChar->type, Line);
+          exit(1);
+      }
     return 1;
+}
+
+void match(FILE *file, struct CurChar *curChar, struct Token *token, int t, char *what) {
+    if (token->type == t) {
+      lexScan(file, curChar, token);
+    } else {
+      printf("%s expected on line %d\n", what, Line);
+      exit(1);
+    }
+  }
+  
+  // Match a semicon and fetch the next token
+void semi(FILE *file, struct CurChar *curChar, struct Token *token) {
+    match(file, curChar, token, T_SEMI, ";");
 }
