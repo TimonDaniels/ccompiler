@@ -9,7 +9,7 @@ int getPrecedense(int op)
     int prec = operatorPrecedense[op];
     if (prec == 0)
     {
-        printf("Error: unexpected token\n");
+        printf("Error: unexpected token in getPrecedense\n");
         exit(1);
     }
     return prec;

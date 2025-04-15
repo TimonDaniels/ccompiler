@@ -1,6 +1,5 @@
 #include "global.h"
-#include "characters.h"
-#include "token.h"
+#include "defs.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -70,21 +69,21 @@ int lexScan(FILE *file, struct CurChar *curChar, struct Token *token)
         token->type = T_EOF;
         return 0;
     case '+':
-        token->type = PLUS;
+        token->type = T_PLUS;
         break;
     case '-':
-        token->type = MINUS;
+        token->type = T_MINUS;
         break;
     case '*':
-        token->type = TIMES;
+        token->type = T_STAR;
         break;
     case '/':
-        token->type = DEVIDE;
+        token->type = T_SLASH;
         break;
     default:
         if (isdigit(curChar->type))
         {
-            token->type = INT;
+            token->type = T_INTLIT;
             token->value = scanInt(file, curChar);
             break;
         }
@@ -92,7 +91,7 @@ int lexScan(FILE *file, struct CurChar *curChar, struct Token *token)
 
     switch (token->type)
     {
-    case INT:
+    case T_INTLIT:
         printf("token: %d\n", token->value);
         break;
     default:

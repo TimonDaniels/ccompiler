@@ -1,45 +1,28 @@
-#include "characters.h"
-#include "token.h"
+#include "defs.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
 
-enum nodetype
-{
-    VAL,
-    ADD,
-    SUB,
-    MUL,
-    DIV,
-};
-
 int getNodeType(int op)
 {
     switch (op)
     {
-    case PLUS:
-        return ADD;
-    case MINUS:
-        return SUB;
-    case TIMES:
-        return MUL;
-    case DEVIDE:
-        return DIV;
-    default:
-        printf("Error: unexpected token\n");
-        exit(1);
+        case T_PLUS:
+            return (A_ADD);
+        case T_MINUS:
+            return (A_SUBTRACT);
+        case T_STAR:
+            return (A_MULTIPLY);
+        case T_SLASH:
+            return (A_DIVIDE);
+        default:
+            printf("Error: unexpected token in getNodeType\n");
+            exit(1);
     }
 }
 
-struct ASTnode
-{
-    int op;
-    struct ASTnode *left;
-    struct ASTnode *right;
-    int intvalue;
-};
 
 struct ASTnode *mkastnode(int op, struct ASTnode *left, struct ASTnode *right, int intvalue)
 {
@@ -69,10 +52,10 @@ struct ASTnode *getNextIntNode(FILE *file, struct CurChar *curChar, struct Token
 {
     // assumes the next token is scanned and of type INT
     struct ASTnode *left;
-    switch (token->type == INT)
+    switch (token->type)
     {
-    case INT:
-        left = mkastleaf(VAL, token->value);
+    case T_INTLIT:
+        left = mkastleaf(A_INTLIT, token->value);
         lexScan(file, curChar, token);
         return left;
     default:
@@ -101,7 +84,7 @@ int intepretASTTree(struct ASTnode *n)
 {
     int v1, v2;
 
-    if (n->op == VAL)
+    if (n->op == A_INTLIT)
     {
         return n->intvalue;
     }
@@ -111,16 +94,16 @@ int intepretASTTree(struct ASTnode *n)
 
     switch (n->op)
     {
-    case ADD:
+    case A_ADD:
         return v1 + v2;
-    case SUB:
+    case A_SUBTRACT:
         return v1 - v2;
-    case MUL:
+    case A_MULTIPLY:
         return v1 * v2;
-    case DIV:
+    case A_DIVIDE:
         return v1 / v2;
     default:
-        printf("Error: unexpected token\n");
+        printf("Error: unexpected token in interpretASTTree\n");
         exit(1);
     }
 }

@@ -1,7 +1,6 @@
 #define extern_
 #include "global.h"
-#include "characters.h"
-#include "token.h"
+#include "defs.h"
 #include "expresions.c"
 
 #include <stdio.h>
