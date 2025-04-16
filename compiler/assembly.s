@@ -25,7 +25,7 @@ main:
 	imulq	%r8, %r9
 	movq	%r9, %rdi
 	call	printint
-	movq	$17, %r8
+	movq	$18, %r8
 	movq	$2, %r9
 	movq	$4, %r10
 	imulq	%r9, %r10
@@ -35,7 +35,7 @@ main:
 	movq	$1, %r8
 	movq	$2, %r9
 	addq	%r8, %r9
-	movq	$8, %r8
+	movq	$9, %r8
 	addq	%r9, %r8
 	movq	$5, %r9
 	movq	$2, %r10

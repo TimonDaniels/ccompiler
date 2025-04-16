@@ -49,7 +49,7 @@ static int scanInt(FILE *file, struct CurChar *curChar)
     // declare variables
     int k, value = 0;
 
-    while ((k = chrpos("012345689", curChar->type)) >= 0)
+    while ((k = chrpos("0123456789", curChar->type)) >= 0)
     {
         value = 10 * value + k;
         nextc(file, curChar);

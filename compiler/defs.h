@@ -39,4 +39,10 @@ struct ASTnode {
   int intvalue;				// For A_INTLIT, the integer value
 };
 
+
+// Symbol table structure
+struct symtable {
+  char *name
+};
+
 #endif
