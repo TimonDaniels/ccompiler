@@ -28,27 +28,24 @@ struct ASTnode *binaryExpression(FILE *file, struct CurChar *curChar, struct Tok
 
     left = getNextIntNode(file, curChar, token);
     type = token->type;
-    if (type == T_SEMI)
-    {
-        return left;
-    }
+    if (type == T_SEMI || type == T_RPAREN)
+        return (left);
 
     current_precedense = getPrecedense(type);
     while (current_precedense > prec)
     {
         lexScan(file, curChar, token);
         right = binaryExpression(file, curChar, token, current_precedense);
-        left = mkastnode(getNodeType(type), left, right, 0);
+        left = mkastnode(getNodeType(type), left, NULL, right, 0);
+        
+        // check for the end of the expression
         type = token->type;
-
+        if (type == T_SEMI || type == T_RPAREN)
+            return (left);
+    
+        // check the precedence of the next token
         current_precedense = operatorPrecedense[type];
-
-        if (type == T_SEMI)
-        {
-            return left;
-        }
-
     }
 
-    return left;
+    return (left);
 }

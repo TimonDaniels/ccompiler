@@ -3,6 +3,7 @@
 
 #include "global.h"
 #include "defs.h"
+#include "misc.c"
 
 // List of available registers
 // and their names
@@ -171,16 +172,115 @@ int cggreaterthan(int r1, int r2) { return(cgcompare(r1, r2, "setg")); }
 int cglessequal(int r1, int r2) { return(cgcompare(r1, r2, "setle")); }
 int cggreaterequal(int r1, int r2) { return(cgcompare(r1, r2, "setge")); }
 
+// Generate a label
+void cglabel(int l) {
+  fprintf(Outfile, "L%d:\n", l);
+}
+
+// Generate a jump to a label
+void cgjump(int l) {
+  fprintf(Outfile, "\tjmp\tL%d\n", l);
+}
+
+// List of comparison instructions,
+// in AST order: A_EQ, A_NE, A_LT, A_GT, A_LE, A_GE
+static char *cmplist[] =
+  { "sete", "setne", "setl", "setg", "setle", "setge" };
+
+// Compare two registers and set if true.
+int cgcompare_and_set(int ASTop, int r1, int r2) {
+
+  // Check the range of the AST operation
+  if (ASTop < A_EQ || ASTop > A_GE)
+    fatal("Bad ASTop in cgcompare_and_set()");
+
+  fprintf(Outfile, "\tcmpq\t%s, %s\n", reglist[r2], reglist[r1]);
+  fprintf(Outfile, "\t%s\t%s\n", cmplist[ASTop - A_EQ], breglist[r2]);
+  fprintf(Outfile, "\tmovzbq\t%s, %s\n", breglist[r2], reglist[r2]);
+  free_register(r1);
+  return (r2);
+}
+
+// List of inverted jump instructions,
+// in AST order: A_EQ, A_NE, A_LT, A_GT, A_LE, A_GE
+static char *invcmplist[] = { "jne", "je", "jge", "jle", "jg", "jl" };
+
+// Compare two registers and jump if false.
+int cgcompare_and_jump(int ASTop, int r1, int r2, int label) {
+
+  // Check the range of the AST operation
+  if (ASTop < A_EQ || ASTop > A_GE)
+    fatal("Bad ASTop in cgcompare_and_set()");
+
+  fprintf(Outfile, "\tcmpq\t%s, %s\n", reglist[r2], reglist[r1]);
+  fprintf(Outfile, "\t%s\tL%d\n", invcmplist[ASTop - A_EQ], label);
+  freeall_registers();
+  return (NOREG);
+}
+
+static int label(void) {
+  static int l = 1;
+  return (l++);
+}
+
+static int genAST(struct ASTnode *n, int reg, int parentASTop);
+
+// generate IF assembly code
+static int genIFAST(struct ASTnode *n) {
+  int Lfalse, Lend;
+
+  Lfalse = label();
+  if (n->right)
+    Lend = label();
+  
+  genAST(n->left, Lfalse, n->op);
+  freeall_registers();
+
+  genAST(n->mid, NOREG, n->op);
+  freeall_registers();
+
+  if (n->right)
+    cgjump(Lend);
+
+  cglabel(Lfalse);
+
+  if (n->right) {
+    genAST(n->right, NOREG, n->op);
+    freeall_registers();
+    cglabel(Lend);
+  }
+
+  return (NOREG);  
+}
+
 // Given an AST, generate
 // assembly code recursively
-static int genAST(struct ASTnode *n, int reg) {
+static int genAST(struct ASTnode *n, int reg, int parentASTop) {
+    if (n == NULL) {
+      printf("NULL AST node passed to genAST\n");
+      exit(0);
+    }
+
     int leftreg, rightreg;
-  
+
+    switch (n->op) {
+      case A_IF:
+        printf("generating IF assembly code\n");
+        return (genIFAST(n));
+      case A_GLUE:
+        printf("generating for glued AST nodes\n");
+        genAST(n->left, NOREG, n->op);
+        freeall_registers();
+        genAST(n->right, NOREG, n->op);
+        freeall_registers();
+        return (NOREG);
+    }
+
     // Get the left and right sub-tree values
     if (n->left)
-      leftreg = genAST(n->left, -1);
+      leftreg = genAST(n->left, NOREG, n->op);
     if (n->right)
-      rightreg = genAST(n->right, leftreg);
+      rightreg = genAST(n->right, leftreg, n->op);
   
     switch (n->op) {
       case A_ADD:
@@ -192,25 +292,38 @@ static int genAST(struct ASTnode *n, int reg) {
       case A_DIVIDE:
         return (cgdiv(leftreg, rightreg));
       case A_EQ:
-        return (cgequal(leftreg, rightreg));
       case A_NE:
-        return (cgnotequal(leftreg, rightreg));
       case A_LT:
-        return (cglessthan(leftreg, rightreg));
       case A_GT:
-        return (cggreaterthan(leftreg, rightreg));
       case A_LE:
-        return (cglessequal(leftreg, rightreg));
       case A_GE:
-        return (cggreaterequal(leftreg, rightreg));
+        if (parentASTop == A_IF) {
+          printf("generating comparison for IF statement\n");
+          return (cgcompare_and_jump(n->op, leftreg, rightreg, reg));
+        }
+        else {
+          printf("generating comparison for assignment\n"); 
+          return (cgcompare_and_set(n->op, leftreg, rightreg));
+        }
       case A_INTLIT:
+        printf("generating for integer literal %d\n", n->v.intvalue);
         return (cgloadint(n->v.intvalue));
       case A_IDENT:
+        printf("generating for identifier %s\n", Gsym[n->v.id].name);
         return (cgloadglob(Gsym[n->v.id].name));
       case A_LVIDENT:
+        printf("generating for left-hand identifier %s\n", Gsym[n->v.id].name);
         return (cgstorglob(reg, Gsym[n->v.id].name));
       case A_ASSIGN:
+        // The work has already been done, return the result
         return (rightreg);
+      case A_PRINT:
+        // Print the left-child's value
+        // and return no register
+        printf("generating for print statement\n");
+        cgprintint(leftreg);
+        freeall_registers();
+        return (NOREG);
       default:
         fprintf(stderr, "Unknown AST operator %d\n", n->op);
         exit(1);

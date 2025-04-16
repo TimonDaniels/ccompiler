@@ -5,8 +5,10 @@
 #include "expressions.c"
 #include "gen_asm.c"
 #include "decl.c"
+#include "misc.c"
+#include "scan.c"
 
-void print_statement(FILE *file, struct CurChar *curChar, struct Token *token) {
+struct ASTnode* print_statement(FILE *file, struct CurChar *curChar, struct Token *token) {
   struct ASTnode *tree;
   int reg;
 
@@ -16,15 +18,15 @@ void print_statement(FILE *file, struct CurChar *curChar, struct Token *token) {
   // Parse the following expression and
   // generate the assembly code
   tree = binaryExpression(file, curChar, token, 0);
-  reg = genAST(tree, -1);
-  cgprintint(reg);
-  freeall_registers();
+
+  tree = mkastnode(A_PRINT, tree, NULL, NULL, 0);
 
   // Match the following semicolon
   semi(file, curChar, token);
+  return (tree);
 }
 
-void assignment_statement(FILE *file, struct CurChar *curChar, struct Token *token) {
+struct ASTnode* assignment_statement(FILE *file, struct CurChar *curChar, struct Token *token) {
   struct ASTnode *left, *right, *tree;
   int id;
 
@@ -44,39 +46,82 @@ void assignment_statement(FILE *file, struct CurChar *curChar, struct Token *tok
   left = binaryExpression(file, curChar, token, 0);
 
   // Make an assignment AST tree
-  tree = mkastnode(A_ASSIGN, left, right, 0);
-
-  // Generate the assembly code for the assignment
-  genAST(tree, -1);
-  freeall_registers();
+  tree = mkastnode(A_ASSIGN, left, NULL, right, 0);
 
   // Match the following semicolon
   semi(file, curChar, token);
+  return (tree);
 }
 
+struct ASTnode* compound_statement(FILE *file, struct CurChar *curChar, struct Token *token);
 
-// Parse one or more statements
-void statements(FILE *file, struct CurChar *curChar, struct Token *token) {
-    struct ASTnode *tree;
-    int reg;
+// Parse an IF statement including
+// any optional ELSE clause
+// and return its AST
+struct ASTnode *if_statement(FILE *file, struct CurChar *curChar, struct Token *token) {
+  struct ASTnode *condAST, *trueAST, *falseAST = NULL;
+  int reg;
+
+  match(file, curChar, token, T_IF, "if");
+  lparen(file, curChar, token);
+
+  condAST = binaryExpression(file, curChar, token, 0);
+
+  if (condAST->op < A_EQ || condAST->op > A_GE)
+    fatal("Bad operator in if statement");
+  rparen(file, curChar, token);
+
+  trueAST = compound_statement(file, curChar, token);
+
+  if (token->type == T_ELSE) {
+    lexScan(file, curChar, token);
+    falseAST = compound_statement(file, curChar, token);
+  }
   
-    while (1) {
-      switch (token->type) {
-        case T_PRINT:
-          print_statement(file, curChar, token);
-          break;
-        case T_INT:
-          var_declaration(file, curChar, token);
-          break;
-        case T_IDENT:
-          assignment_statement(file, curChar, token);
-          break;
-        case T_EOF:
-          return;
-        default:
-          printf("Error: unexpected token in statements\n");
-          exit(1);
+  return (mkastnode(A_IF, condAST, trueAST, falseAST, 0));
+}
+
+struct ASTnode* compound_statement(FILE *file, struct CurChar *curChar, struct Token *token) {
+  struct ASTnode *left = NULL;
+  struct ASTnode *tree;
+  int reg;
+
+  lbrace(file, curChar, token);
+
+  while (1) {
+    switch (token->type) {
+      case T_PRINT:
+        tree = print_statement(file, curChar, token);
+        printf("found print statement\n");
+        break;
+      case T_INT:
+        var_declaration(file, curChar, token);
+        printf("found variable declaration\n");
+        tree = NULL;
+        break;
+      case T_IDENT:
+        tree = assignment_statement(file, curChar, token);
+        printf("found assignment statement\n");
+        break;
+      case T_IF:
+        tree = if_statement(file, curChar, token);
+        printf("found if statement\n");
+        break;
+      case T_RBRACE:
+        rbrace(file, curChar, token);
+        return (left);
+
+      default:
+        fatald("Syntax error, token", token->type);
+    }
+
+    if (tree) {
+      if (left == NULL) {
+        left = tree;
+      } else {
+        left = mkastnode(A_GLUE, left, NULL, tree, 0);
       }
+    }
   }
 }
 

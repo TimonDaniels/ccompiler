@@ -15,7 +15,7 @@ int getNodeType(int op)
 }
 
 
-struct ASTnode *mkastnode(int op, struct ASTnode *left, struct ASTnode *right, int intvalue)
+struct ASTnode *mkastnode(int op, struct ASTnode *left, struct ASTnode *mid, struct ASTnode *right, int intvalue)
 {
     struct ASTnode *new;
 
@@ -28,6 +28,7 @@ struct ASTnode *mkastnode(int op, struct ASTnode *left, struct ASTnode *right, i
 
     new->op = op;
     new->left = left;
+    new->mid = mid;
     new->right = right;
     new->v.intvalue = intvalue;
 
@@ -36,7 +37,7 @@ struct ASTnode *mkastnode(int op, struct ASTnode *left, struct ASTnode *right, i
 
 struct ASTnode *mkastleaf(int op, int intvalue)
 {
-    return (mkastnode(op, NULL, NULL, intvalue));
+    return (mkastnode(op, NULL, NULL, NULL, intvalue));
 }
 
 struct ASTnode *getNextIntNode(FILE *file, struct CurChar *curChar, struct Token *token)
@@ -81,7 +82,7 @@ struct ASTnode *createASTTree(FILE *file, struct CurChar *curChar, struct Token 
 
     right = createASTTree(file, curChar, token);
 
-    new = mkastnode(nodetype, left, right, 0);
+    new = mkastnode(nodetype, left, NULL, right, 0);
     return (new);
 }
 

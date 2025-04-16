@@ -10,6 +10,12 @@
 
 // Original work Copyright (c) 2019 Warren Toomey, GPL3
 // Modified by Timon Daniels (2025)
+// Initialise global variables
+static void init() {
+    Line = 1;
+    Putback = '\n';
+}
+
 
 void main()
 {
@@ -18,6 +24,8 @@ void main()
     struct CurChar curChar;
     struct Token token;
     struct ASTnode *rootnode;
+    
+    init();
 
     // open the file
     InFile = fopen("code-1.txt", "r");
@@ -38,9 +46,11 @@ void main()
     // read the file
     printf("Reading the file...\n");
     lexScan(InFile, &curChar, &token);
-    cgpreamble();
+    
     printf("Generating assembly code...\n");
-    statements(InFile, &curChar, &token);
+    cgpreamble();
+    rootnode = compound_statement(InFile, &curChar, &token);
+    genAST(rootnode, NOREG, 0);
     cgpostamble();
 
     // close the Outfile

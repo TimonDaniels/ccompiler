@@ -93,17 +93,23 @@ static int scanident(FILE *file, struct CurChar *curChar, char *buf, int lim) {
 // Switch on the first letter so that we don't have
 // to waste time strcmp()ing against all the keywords.
 static int keyword(char *s) {
-    switch (*s) {
-      case 'p':
-        if (!strcmp(s, "print"))
-          return (T_PRINT);
-        break;
-      case 'i':
-        if (!strcmp(s, "int"))
-          return (T_INT);
-        break;
-    }
-    return (0);
+  switch (*s) {
+    case 'e':
+      if (!strcmp(s, "else"))
+        return (T_ELSE);
+      break;
+    case 'i':
+      if (!strcmp(s, "if"))
+        return (T_IF);
+      if (!strcmp(s, "int"))
+        return (T_INT);
+      break;
+    case 'p':
+      if (!strcmp(s, "print"))
+        return (T_PRINT);
+      break;
+  }
+  return (0);
 }
 
 int lexScan(FILE *file, struct CurChar *curChar, struct Token *token)
@@ -132,6 +138,18 @@ int lexScan(FILE *file, struct CurChar *curChar, struct Token *token)
     case ';':
         token->type = T_SEMI;
         break;
+    case '{':
+      token->type = T_LBRACE;
+      break;
+    case '}':
+      token->type = T_RBRACE;
+      break;
+    case '(':
+      token->type = T_LPAREN;
+      break;
+    case ')':
+      token->type = T_RPAREN;
+      break;
     case '=':
       nextc(file, curChar);
       if ((curChar->type) == '=') {
@@ -204,13 +222,34 @@ void match(FILE *file, struct CurChar *curChar, struct Token *token, int t, char
     }
   }
   
-  // Match a semicon and fetch the next token
+// Match a semicon and fetch the next token
 void semi(FILE *file, struct CurChar *curChar, struct Token *token) {
     match(file, curChar, token, T_SEMI, ";");
 }
 
+// Match an assignment operator and fetch the next token
 void ident(FILE *file, struct CurChar *curChar, struct Token *token) {
     match(file, curChar, token, T_IDENT, "identifier");
+}
+
+// Match a left brace and fetch the next token
+void lbrace(FILE *file, struct CurChar *curChar, struct Token *token) {
+  match(file, curChar, token, T_LBRACE, "{");
+}
+
+// Match a right brace and fetch the next token
+void rbrace(FILE *file, struct CurChar *curChar, struct Token *token) {
+  match(file, curChar, token, T_RBRACE, "}");
+}
+
+// Match a left parenthesis and fetch the next token
+void lparen(FILE *file, struct CurChar *curChar, struct Token *token) {
+  match(file, curChar, token, T_LPAREN, "(");
+}
+
+// Match a right parenthesis and fetch the next token
+void rparen(FILE *file, struct CurChar *curChar, struct Token *token) {
+  match(file, curChar, token, T_RPAREN, ")");
 }
 
 #endif // SCAN_C

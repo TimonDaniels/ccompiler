@@ -1,2 +1,5 @@
 # file extensions
 *.exe
+
+# folders
+.vscode

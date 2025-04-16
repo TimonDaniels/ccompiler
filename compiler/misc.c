@@ -1,3 +1,6 @@
+#ifndef MISC_C
+#define MISC_C
+
 #include <stdio.h>
 #include "global.h"
 
@@ -17,3 +20,5 @@ void fatal(char *s) {
   void fatalc(char *s, int c) {
     fprintf(stderr, "%s:%c on line %d\n", s, c, Line); exit(1);
   }
+
+#endif // MISC_C
