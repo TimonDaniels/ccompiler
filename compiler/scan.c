@@ -3,6 +3,8 @@
 
 #include "global.h"
 #include "defs.h"
+#include "misc.c"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -131,8 +133,40 @@ int lexScan(FILE *file, struct CurChar *curChar, struct Token *token)
         token->type = T_SEMI;
         break;
     case '=':
-        token->type = T_EQUALS;
-        break;
+      nextc(file, curChar);
+      if ((curChar->type) == '=') {
+        token->type = T_EQ;
+      } else {
+        Putback = curChar->type;
+        token->type = T_ASSIGN;
+      }
+      break;
+    case '!':
+      nextc(file, curChar);
+      if ((curChar->type) == '=') {
+        token->type = T_NE;
+      } else {
+        fatalc("Unrecognised character", curChar->type);
+      }
+      break;
+    case '<':
+      nextc(file, curChar);
+      if ((curChar->type) == '=') {
+        token->type = T_LE;
+      } else {
+        Putback = curChar->type;
+        token->type = T_LT;
+      }
+      break;
+    case '>':
+      nextc(file, curChar);
+      if ((curChar->type) == '=') {
+        token->type = T_GE;
+      } else {
+        Putback = curChar->type;
+        token->type = T_GT;
+      }
+      break;
     default:
       // If it's a digit, scan the
       // literal integer value in

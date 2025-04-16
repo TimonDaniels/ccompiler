@@ -8,6 +8,7 @@
 // and their names
 static int freereg[4];
 static char *reglist[4]= { "%r8", "%r9", "%r10", "%r11" };
+static char *breglist[4] = { "%r8b", "%r9b", "%r10b", "%r11b" };
 
 // Set all registers as available
 void freeall_registers(void)
@@ -154,6 +155,22 @@ void cgprintint(int r) {
   free_register(r);
 }
 
+// Compare two registers.
+static int cgcompare(int r1, int r2, char *how) {
+  fprintf(Outfile, "\tcmpq\t%s, %s\n", reglist[r2], reglist[r1]);
+  fprintf(Outfile, "\t%s\t%s\n", how, breglist[r2]);
+  fprintf(Outfile, "\tandq\t$255,%s\n", reglist[r2]);
+  free_register(r1);
+  return (r2);
+}
+
+int cgequal(int r1, int r2) { return(cgcompare(r1, r2, "sete")); }
+int cgnotequal(int r1, int r2) { return(cgcompare(r1, r2, "setne")); }
+int cglessthan(int r1, int r2) { return(cgcompare(r1, r2, "setl")); }
+int cggreaterthan(int r1, int r2) { return(cgcompare(r1, r2, "setg")); }
+int cglessequal(int r1, int r2) { return(cgcompare(r1, r2, "setle")); }
+int cggreaterequal(int r1, int r2) { return(cgcompare(r1, r2, "setge")); }
+
 // Given an AST, generate
 // assembly code recursively
 static int genAST(struct ASTnode *n, int reg) {
@@ -167,13 +184,25 @@ static int genAST(struct ASTnode *n, int reg) {
   
     switch (n->op) {
       case A_ADD:
-        return (cgadd(leftreg,rightreg));
+        return (cgadd(leftreg, rightreg));
       case A_SUBTRACT:
-        return (cgsub(leftreg,rightreg));
+        return (cgsub(leftreg, rightreg));
       case A_MULTIPLY:
-        return (cgmul(leftreg,rightreg));
+        return (cgmul(leftreg, rightreg));
       case A_DIVIDE:
-        return (cgdiv(leftreg,rightreg));
+        return (cgdiv(leftreg, rightreg));
+      case A_EQ:
+        return (cgequal(leftreg, rightreg));
+      case A_NE:
+        return (cgnotequal(leftreg, rightreg));
+      case A_LT:
+        return (cglessthan(leftreg, rightreg));
+      case A_GT:
+        return (cggreaterthan(leftreg, rightreg));
+      case A_LE:
+        return (cglessequal(leftreg, rightreg));
+      case A_GE:
+        return (cggreaterequal(leftreg, rightreg));
       case A_INTLIT:
         return (cgloadint(n->v.intvalue));
       case A_IDENT:

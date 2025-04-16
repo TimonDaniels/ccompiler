@@ -2,7 +2,12 @@
 #include "parse.c"
 
 // maps 1 to 1 with the enum nodetypes
-static int operatorPrecedense[] = {0, 0, 1, 1, 2, 2};
+static int operatorPrecedense[] = {
+    0, 10, 10,			// T_EOF, T_PLUS, T_MINUS
+    20, 20,			    // T_STAR, T_SLASH
+    30, 30,			    // T_EQ, T_NE
+    40, 40, 40, 40		// T_LT, T_GT, T_LE, T_GE
+  };
 
 int getPrecedense(int op)
 {

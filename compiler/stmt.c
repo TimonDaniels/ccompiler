@@ -38,7 +38,7 @@ void assignment_statement(FILE *file, struct CurChar *curChar, struct Token *tok
   right = mkastleaf(A_LVIDENT, id);
 
   // Ensure we have an equals sign
-  match(file, curChar, token, T_EQUALS, "=");
+  match(file, curChar, token, T_ASSIGN, "=");
 
   // Parse the following expression
   left = binaryExpression(file, curChar, token, 0);

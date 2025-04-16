@@ -8,20 +8,10 @@
 
 int getNodeType(int op)
 {
-    switch (op)
-    {
-        case T_PLUS:
-            return (A_ADD);
-        case T_MINUS:
-            return (A_SUBTRACT);
-        case T_STAR:
-            return (A_MULTIPLY);
-        case T_SLASH:
-            return (A_DIVIDE);
-        default:
-            printf("Error: unexpected token in getNodeType\n");
-            exit(1);
-    }
+    if (op > T_EOF && op < T_INTLIT)
+        return (op);
+    printf("Syntax error: unexpected token\n");
+    exit(1);
 }
 
 
