@@ -7,11 +7,11 @@
             "args": [
                 "-fdiagnostics-color=always",
                 "-g",
-                "${workspaceFolder}/scanner/main.c",
+                "${workspaceFolder}/compiler/main.c",
                 "-o",
-                "${workspaceFolder}/scanner/main.exe",
+                "${workspaceFolder}/compiler/main.exe",
                 "-I",
-                "${workspaceFolder}/scanner"
+                "${workspaceFolder}/compiler"
             ],
             "options": {
                 "cwd": "${workspaceFolder}"

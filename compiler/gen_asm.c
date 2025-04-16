@@ -1,3 +1,6 @@
+#ifndef GEN_ASM_C
+#define GEN_ASM_C
+
 #include "global.h"
 #include "defs.h"
 
@@ -79,7 +82,7 @@ void cgpostamble()
 
 // Load an integer literal value into a register.
 // Return the number of the register
-int cgload(int value) {
+int cgloadint(int value) {
 
   // Get a new register
   int r= alloc_register();
@@ -87,6 +90,26 @@ int cgload(int value) {
   // Print out the code to initialise it
   fprintf(Outfile, "\tmovq\t$%d, %s\n", value, reglist[r]);
   return(r);
+}
+
+int cgloadglob(char *identifier) {
+  // Get a new register
+  int r = alloc_register();
+
+  // Print out the code to initialise it
+  fprintf(Outfile, "\tmovq\t%s(\%%rip), %s\n", identifier, reglist[r]);
+  return (r);
+}
+
+// Generate a global symbol
+void cgglobsym(char *sym) {
+  fprintf(Outfile, "\t.comm\t%s,8,8\n", sym);
+}
+
+// Store a register's value into a variable
+int cgstorglob(int r, char *identifier) {
+  fprintf(Outfile, "\tmovq\t%s, %s(\%%rip)\n", reglist[r], identifier);
+  return (r);
 }
 
 // Add two registers together and return
@@ -133,14 +156,14 @@ void cgprintint(int r) {
 
 // Given an AST, generate
 // assembly code recursively
-static int genAST(struct ASTnode *n) {
+static int genAST(struct ASTnode *n, int reg) {
     int leftreg, rightreg;
   
     // Get the left and right sub-tree values
     if (n->left)
-      leftreg = genAST(n->left);
+      leftreg = genAST(n->left, -1);
     if (n->right)
-      rightreg = genAST(n->right);
+      rightreg = genAST(n->right, leftreg);
   
     switch (n->op) {
       case A_ADD:
@@ -152,11 +175,18 @@ static int genAST(struct ASTnode *n) {
       case A_DIVIDE:
         return (cgdiv(leftreg,rightreg));
       case A_INTLIT:
-        return (cgload(n->intvalue));
+        return (cgloadint(n->v.intvalue));
+      case A_IDENT:
+        return (cgloadglob(Gsym[n->v.id].name));
+      case A_LVIDENT:
+        return (cgstorglob(reg, Gsym[n->v.id].name));
+      case A_ASSIGN:
+        return (rightreg);
       default:
         fprintf(stderr, "Unknown AST operator %d\n", n->op);
         exit(1);
     }
 }
-  
+
+#endif // GEN_ASM_C
   

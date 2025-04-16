@@ -1,3 +1,6 @@
+#ifndef SCAN_C
+#define SCAN_C
+
 #include "global.h"
 #include "defs.h"
 #include <stdio.h>
@@ -91,7 +94,11 @@ static int keyword(char *s) {
     switch (*s) {
       case 'p':
         if (!strcmp(s, "print"))
-      return (T_PRINT);
+          return (T_PRINT);
+        break;
+      case 'i':
+        if (!strcmp(s, "int"))
+          return (T_INT);
         break;
     }
     return (0);
@@ -123,6 +130,9 @@ int lexScan(FILE *file, struct CurChar *curChar, struct Token *token)
     case ';':
         token->type = T_SEMI;
         break;
+    case '=':
+        token->type = T_EQUALS;
+        break;
     default:
       // If it's a digit, scan the
       // literal integer value in
@@ -140,9 +150,9 @@ int lexScan(FILE *file, struct CurChar *curChar, struct Token *token)
           token->type = tokentype;
           break;
         }
-        // Not a recognised keyword, so an error for now
-        printf("Unrecognised symbol %s on line %d\n", Text, Line);
-        exit(1);
+        // Else it's an identifier, return T_IDENT
+        token->type = T_IDENT;
+        break;        
           }
           // The character isn't part of any recognised token, error
           printf("Unrecognised character %c on line %d\n", curChar->type, Line);
@@ -164,3 +174,9 @@ void match(FILE *file, struct CurChar *curChar, struct Token *token, int t, char
 void semi(FILE *file, struct CurChar *curChar, struct Token *token) {
     match(file, curChar, token, T_SEMI, ";");
 }
+
+void ident(FILE *file, struct CurChar *curChar, struct Token *token) {
+    match(file, curChar, token, T_IDENT, "identifier");
+}
+
+#endif // SCAN_C

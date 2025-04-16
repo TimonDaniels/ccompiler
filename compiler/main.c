@@ -39,6 +39,7 @@ void main()
     printf("Reading the file...\n");
     lexScan(InFile, &curChar, &token);
     cgpreamble();
+    printf("Generating assembly code...\n");
     statements(InFile, &curChar, &token);
     cgpostamble();
 

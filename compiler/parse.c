@@ -1,4 +1,5 @@
 #include "defs.h"
+#include "symbols.c"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -38,7 +39,7 @@ struct ASTnode *mkastnode(int op, struct ASTnode *left, struct ASTnode *right, i
     new->op = op;
     new->left = left;
     new->right = right;
-    new->intvalue = intvalue;
+    new->v.intvalue = intvalue;
 
     return (new);
 }
@@ -52,16 +53,29 @@ struct ASTnode *getNextIntNode(FILE *file, struct CurChar *curChar, struct Token
 {
     // assumes the next token is scanned and of type INT
     struct ASTnode *left;
+    int id;
+
     switch (token->type)
     {
     case T_INTLIT:
         left = mkastleaf(A_INTLIT, token->value);
-        lexScan(file, curChar, token);
-        return left;
+        break;
+    case T_IDENT:
+        // Check that this identifier exists
+        id = findglob(Text);
+        if (id == -1)
+          printf("Unknown variable", Text);
+    
+        // Make a leaf AST node for it
+        left = mkastleaf(A_IDENT, id);
+        break;
     default:
         printf("Error: unexpected token, expected int \n");
         exit(1);
     }
+
+    lexScan(file, curChar, token);
+    return left;
 }
 
 struct ASTnode *createASTTree(FILE *file, struct CurChar *curChar, struct Token *token)
@@ -87,7 +101,7 @@ int intepretASTTree(struct ASTnode *n)
 
     if (n->op == A_INTLIT)
     {
-        return n->intvalue;
+        return n->v.intvalue;
     }
 
     v1 = intepretASTTree(n->left);
