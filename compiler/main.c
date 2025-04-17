@@ -2,7 +2,7 @@
 #include "global.h"
 #include "defs.h"
 #include "gen_asm.c"
-#include "stmt.c"
+#include "statements.c"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -20,7 +20,7 @@ static void init() {
 void main()
 {
     // declare variables
-    FILE *InFile;
+    FILE *Infile;
     struct CurChar curChar;
     struct Token token;
     struct ASTnode *rootnode;
@@ -28,8 +28,8 @@ void main()
     init();
 
     // open the file
-    InFile = fopen("code-1.txt", "r");
-    if (InFile == NULL)
+    Infile = fopen("code-1.txt", "r");
+    if (Infile == NULL)
     {
         fprintf(stderr, "Error: file not found: %s\n", strerror(errno));
         exit(1);
@@ -39,19 +39,22 @@ void main()
     if (Outfile == NULL)
     {
         fprintf(stderr, "Error: could not open assembly file: %s\n", strerror(errno));
-        fclose(InFile);
+        fclose(Infile);
         exit(1);
     }
 
     // read the file
     printf("Reading the file...\n");
-    lexScan(InFile, &curChar, &token);
+    lexScan(Infile, &curChar, &token);
     
     printf("Generating assembly code...\n");
-    cgpreamble();
-    rootnode = compound_statement(InFile, &curChar, &token);
-    genAST(rootnode, NOREG, 0);
-    cgpostamble();
+    cgpreamble();                                              // Output the preamble
+    while (1) {                                                 // Parse a function and
+      rootnode = function_declaration(Infile, &curChar, &token);  // generate the assembly code for it
+      genAST(rootnode, NOREG, 0);                               // generate the assembly code for it
+      if (token.type == T_EOF)                                 // Stop when we have reached EOF
+        break;
+    }
 
     // close the Outfile
     fclose(Outfile);

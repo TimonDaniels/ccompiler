@@ -43,11 +43,9 @@ static void free_register(int reg)
 }
 
 // Print out the assembly preamble
-void cgpreamble()
-{
+void cgpreamble() {
   freeall_registers();
-  fputs(
-	"\t.text\n"
+  fputs("\t.text\n"
 	".LC0:\n"
 	"\t.string\t\"%d\\n\"\n"
 	"printint:\n"
@@ -59,27 +57,22 @@ void cgpreamble()
 	"\tmovl\t%eax, %esi\n"
 	"\tleaq	.LC0(%rip), %rdi\n"
 	"\tmovl	$0, %eax\n"
-	"\tcall	printf@PLT\n"
-	"\tnop\n"
-	"\tleave\n"
-	"\tret\n"
-	"\n"
-	"\t.globl\tmain\n"
-	"\t.type\tmain, @function\n"
-	"main:\n"
-	"\tpushq\t%rbp\n"
-	"\tmovq	%rsp, %rbp\n",
-  Outfile);
+	"\tcall	printf@PLT\n" "\tnop\n" "\tleave\n" "\tret\n" "\n", Outfile);
 }
 
-// Print out the assembly postamble
-void cgpostamble()
-{
-  fputs(
-	"\tmovl	$0, %eax\n"
-	"\tpopq	%rbp\n"
-	"\tret\n",
-  Outfile);
+// Print out a function preamble
+void cgfuncpreamble(char *name) {
+  fprintf(Outfile,
+	  "\t.text\n"
+	  "\t.globl\t%s\n"
+	  "\t.type\t%s, @function\n"
+	  "%s:\n" "\tpushq\t%%rbp\n"
+	  "\tmovq\t%%rsp, %%rbp\n", name, name, name);
+}
+
+// Print out a function postamble
+void cgfuncpostamble() {
+  fputs("\tmovl	$0, %eax\n" "\tpopq	%rbp\n" "\tret\n", Outfile);
 }
 
 // Load an integer literal value into a register.
@@ -300,6 +293,13 @@ static int genAST(struct ASTnode *n, int reg, int parentASTop) {
         freeall_registers();
         genAST(n->right, NOREG, n->op);
         freeall_registers();
+        return (NOREG);
+      case A_FUNCTION:
+        // Generate the function's preamble before the code
+        printf("generating for function %s\n", Gsym[n->v.id].name);
+        cgfuncpreamble(Gsym[n->v.id].name);
+        genAST(n->left, NOREG, n->op);
+        cgfuncpostamble();
         return (NOREG);
     }
 
