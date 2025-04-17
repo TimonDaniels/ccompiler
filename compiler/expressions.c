@@ -1,5 +1,6 @@
 #include "scan.c"
 #include "parse.c"
+#include "types.c"
 
 // maps 1 to 1 with the enum nodetypes
 static int operatorPrecedense[] = {
@@ -23,28 +24,43 @@ int getPrecedense(int op)
 struct ASTnode *binaryExpression(FILE *file, struct CurChar *curChar, struct Token *token, int prec)
 {
     struct ASTnode *left, *right;
-    int type;
+    int tokentype;
+    int lefttype, righttype;
     int current_precedense;
 
     left = getNextIntNode(file, curChar, token);
-    type = token->type;
-    if (type == T_SEMI || type == T_RPAREN)
+    tokentype = token->type;
+    if (tokentype == T_SEMI || tokentype == T_RPAREN)
         return (left);
 
-    current_precedense = getPrecedense(type);
+    current_precedense = getPrecedense(tokentype);
     while (current_precedense > prec)
     {
         lexScan(file, curChar, token);
         right = binaryExpression(file, curChar, token, current_precedense);
-        left = mkastnode(getNodeType(type), left, NULL, right, 0);
+
+        // Ensure the two types are compatible.
+        lefttype = left->type;
+        righttype = right->type;
+        if (!type_compatible(&lefttype, &righttype, 0))
+        fatal("Incompatible types");
+
+        // Widen either side if required. type vars are A_WIDEN now
+        if (lefttype)
+            left = mkastnode(lefttype, right->type, NULL, NULL, left, 0);
+        if (righttype)
+            right = mkastnode(righttype, left->type, NULL, NULL, right, 0);
+        
+        // join subtrees together
+        left = mkastnode(getNodeType(tokentype), left->type, left, NULL, right, 0);
         
         // check for the end of the expression
-        type = token->type;
-        if (type == T_SEMI || type == T_RPAREN)
+        tokentype = token->type;
+        if (tokentype == T_SEMI || tokentype == T_RPAREN)
             return (left);
     
         // check the precedence of the next token
-        current_precedense = operatorPrecedense[type];
+        current_precedense = operatorPrecedense[tokentype];
     }
 
     return (left);

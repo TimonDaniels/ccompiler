@@ -15,7 +15,7 @@ int getNodeType(int op)
 }
 
 
-struct ASTnode *mkastnode(int op, struct ASTnode *left, struct ASTnode *mid, struct ASTnode *right, int intvalue)
+struct ASTnode *mkastnode(int op, int type, struct ASTnode *left, struct ASTnode *mid, struct ASTnode *right, int intvalue)
 {
     struct ASTnode *new;
 
@@ -27,6 +27,7 @@ struct ASTnode *mkastnode(int op, struct ASTnode *left, struct ASTnode *mid, str
     }
 
     new->op = op;
+    new->type = type;
     new->left = left;
     new->mid = mid;
     new->right = right;
@@ -35,9 +36,9 @@ struct ASTnode *mkastnode(int op, struct ASTnode *left, struct ASTnode *mid, str
     return (new);
 }
 
-struct ASTnode *mkastleaf(int op, int intvalue)
+struct ASTnode *mkastleaf(int op, int type, int intvalue)
 {
-    return (mkastnode(op, NULL, NULL, NULL, intvalue));
+    return (mkastnode(op, type, NULL, NULL, NULL, intvalue));
 }
 
 struct ASTnode *getNextIntNode(FILE *file, struct CurChar *curChar, struct Token *token)
@@ -49,7 +50,11 @@ struct ASTnode *getNextIntNode(FILE *file, struct CurChar *curChar, struct Token
     switch (token->type)
     {
     case T_INTLIT:
-        left = mkastleaf(A_INTLIT, token->value);
+        if ((token->value) >= 0 && (token->value) <= 255)
+            left = mkastleaf(A_INTLIT, P_CHAR, token->value);
+        else
+            printf("Integer literal out of range\n");
+            left = mkastleaf(A_INTLIT, P_INT, token->value);
         break;
     case T_IDENT:
         // Check that this identifier exists
@@ -58,58 +63,12 @@ struct ASTnode *getNextIntNode(FILE *file, struct CurChar *curChar, struct Token
           printf("Unknown variable", Text);
     
         // Make a leaf AST node for it
-        left = mkastleaf(A_IDENT, id);
+        left = mkastleaf(A_IDENT, Gsym[id].type, id);
         break;
     default:
-        printf("Error: unexpected token, expected int \n");
-        exit(1);
+        fatald("Syntax error, token", token->type);
     }
 
     lexScan(file, curChar, token);
     return left;
-}
-
-struct ASTnode *createASTTree(FILE *file, struct CurChar *curChar, struct Token *token)
-{
-    struct ASTnode *new, *left, *right;
-    int nodetype;
-
-    lexScan(file, curChar, token);
-    left = getNextIntNode(file, curChar, token);
-
-
-    nodetype = getNodeType(token->type);
-
-    right = createASTTree(file, curChar, token);
-
-    new = mkastnode(nodetype, left, NULL, right, 0);
-    return (new);
-}
-
-int intepretASTTree(struct ASTnode *n)
-{
-    int v1, v2;
-
-    if (n->op == A_INTLIT)
-    {
-        return n->v.intvalue;
-    }
-
-    v1 = intepretASTTree(n->left);
-    v2 = intepretASTTree(n->right);
-
-    switch (n->op)
-    {
-    case A_ADD:
-        return v1 + v2;
-    case A_SUBTRACT:
-        return v1 - v2;
-    case A_MULTIPLY:
-        return v1 * v2;
-    case A_DIVIDE:
-        return v1 / v2;
-    default:
-        printf("Error: unexpected token in interpretASTTree\n");
-        exit(1);
-    }
 }

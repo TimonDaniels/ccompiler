@@ -29,7 +29,7 @@ static int newglobindex(void) {
 
 
 // Add a symbol s to the global symbol table, and return its index.
-int addglob(char *name) {
+int addglob(char *name, int type, int stype) {
     int p;
 
     if ((p = findglob(name)) != -1)
@@ -37,6 +37,8 @@ int addglob(char *name) {
     
     p = newglobindex();
     Gsym[p].name = strdup(name);
+    Gsym[p].type = type;
+    Gsym[p].stype = stype;
     return (p);
 }
 

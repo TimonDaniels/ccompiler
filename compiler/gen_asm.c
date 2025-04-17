@@ -77,7 +77,7 @@ void cgfuncpostamble() {
 
 // Load an integer literal value into a register.
 // Return the number of the register
-int cgloadint(int value) {
+int cgloadint(int value, int type) {
 
   // Get a new register
   int r= alloc_register();
@@ -87,23 +87,40 @@ int cgloadint(int value) {
   return(r);
 }
 
-int cgloadglob(char *identifier) {
+int cgloadglob(int id) {
   // Get a new register
   int r = alloc_register();
 
-  // Print out the code to initialise it
-  fprintf(Outfile, "\tmovq\t%s(\%%rip), %s\n", identifier, reglist[r]);
+  // Print out the code to initialise it: P_CHAR or P_INT
+  if (Gsym[id].type == P_INT)
+    fprintf(Outfile, "\tmovq\t%s(\%%rip), %s\n", Gsym[id].name, reglist[r]);
+  else
+    fprintf(Outfile, "\tmovzbq\t%s(\%%rip), %s\n", Gsym[id].name, reglist[r]);
   return (r);
 }
 
 // Generate a global symbol
-void cgglobsym(char *sym) {
-  fprintf(Outfile, "\t.comm\t%s,8,8\n", sym);
+void cgglobsym(int id) {
+  if (Gsym[id].type ==P_INT)
+    fprintf(Outfile, "\t.comm\t%s,8,8\n", Gsym[id].name);
+  else
+    fprintf(Outfile, "\t.comm\t%s,1,1\n", Gsym[id].name);
 }
 
 // Store a register's value into a variable
-int cgstorglob(int r, char *identifier) {
-  fprintf(Outfile, "\tmovq\t%s, %s(\%%rip)\n", reglist[r], identifier);
+int cgstorglob(int r, int id) {
+  if (Gsym[id].type == P_INT)
+    fprintf(Outfile, "\tmovq\t%s, %s(\%%rip)\n", reglist[r], Gsym[id].name);
+  else
+    fprintf(Outfile, "\tmovb\t%s, %s(\%%rip)\n", breglist[r], Gsym[id].name);
+  return (r);
+}
+
+// Widen the value in the register from the old
+// to the new type, and return a register with
+// this new value
+int cgwiden(int r, int oldtype, int newtype) {
+  // Nothing to do
   return (r);
 }
 
@@ -334,13 +351,13 @@ static int genAST(struct ASTnode *n, int reg, int parentASTop) {
         }
       case A_INTLIT:
         printf("generating for integer literal %d\n", n->v.intvalue);
-        return (cgloadint(n->v.intvalue));
+        return (cgloadint(n->v.intvalue, n->type));
       case A_IDENT:
         printf("generating for identifier %s\n", Gsym[n->v.id].name);
-        return (cgloadglob(Gsym[n->v.id].name));
+        return (cgloadglob(n->v.id));
       case A_LVIDENT:
         printf("generating for left-hand identifier %s\n", Gsym[n->v.id].name);
-        return (cgstorglob(reg, Gsym[n->v.id].name));
+        return (cgstorglob(reg, n->v.id));
       case A_ASSIGN:
         // The work has already been done, return the result
         return (rightreg);
