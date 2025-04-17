@@ -81,6 +81,22 @@ struct ASTnode *if_statement(FILE *file, struct CurChar *curChar, struct Token *
   return (mkastnode(A_IF, condAST, trueAST, falseAST, 0));
 }
 
+struct ASTnode* while_statement(FILE *file, struct CurChar *curChar, struct Token *token) {
+  struct ASTnode *condAST, *bodyAST;
+
+  match(file, curChar, token, T_WHILE, "while");
+  lparen(file, curChar, token);
+
+  // find condition expression, and check if correct grammer is used
+  condAST = binaryExpression(file, curChar, token, 0);
+  if (condAST->op < A_EQ || condAST->op > A_GE)
+    fatal("Bad operator in if statement");
+  rparen(file, curChar, token);
+
+  bodyAST = compound_statement(file, curChar, token);
+  return (mkastnode(A_WHILE, condAST, NULL, bodyAST, 0));
+}
+
 struct ASTnode* compound_statement(FILE *file, struct CurChar *curChar, struct Token *token) {
   struct ASTnode *left = NULL;
   struct ASTnode *tree;
@@ -106,6 +122,10 @@ struct ASTnode* compound_statement(FILE *file, struct CurChar *curChar, struct T
       case T_IF:
         tree = if_statement(file, curChar, token);
         printf("found if statement\n");
+        break;
+      case T_WHILE:
+        tree = while_statement(file, curChar, token);
+        printf("found while statement\n");
         break;
       case T_RBRACE:
         rbrace(file, curChar, token);

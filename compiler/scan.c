@@ -76,7 +76,8 @@ static int scanident(FILE *file, struct CurChar *curChar, char *buf, int lim) {
       if (lim - 1 == i) {
         printf("identifier too long on line %d\n", Line);
         exit(1);
-      } else if (i < lim - 1) {
+        } 
+      else if (i < lim - 1) {
         buf[i++] = (curChar->type);
       }
       nextc(file, curChar);
@@ -103,6 +104,10 @@ static int keyword(char *s) {
         return (T_IF);
       if (!strcmp(s, "int"))
         return (T_INT);
+      break;
+    case 'w':
+      if (!strcmp(s, "while"))
+        return (T_WHILE);
       break;
     case 'p':
       if (!strcmp(s, "print"))
@@ -192,7 +197,8 @@ int lexScan(FILE *file, struct CurChar *curChar, struct Token *token)
         token->value = scanInt(file, curChar);
         token->type = T_INTLIT;
         break;
-          } else if (isalpha(curChar->type) || '_' == curChar->type) {
+        } 
+      else if (isalpha(curChar->type) || '_' == curChar->type) {
         // Read in a keyword or identifier
         scanident(file, curChar, Text, TEXTLEN);
     
@@ -205,10 +211,11 @@ int lexScan(FILE *file, struct CurChar *curChar, struct Token *token)
         // Else it's an identifier, return T_IDENT
         token->type = T_IDENT;
         break;        
-          }
-          // The character isn't part of any recognised token, error
-          printf("Unrecognised character %c on line %d\n", curChar->type, Line);
-          exit(1);
+        }
+        
+        // The character isn't part of any recognised token, error
+        printf("Unrecognised character %c on line %d\n", curChar->type, Line);
+        exit(1);
       }
     return 1;
 }

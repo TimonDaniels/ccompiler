@@ -226,7 +226,7 @@ static int label(void) {
 static int genAST(struct ASTnode *n, int reg, int parentASTop);
 
 // generate IF assembly code
-static int genIFAST(struct ASTnode *n) {
+static int genIF(struct ASTnode *n) {
   int Lfalse, Lend;
 
   Lfalse = label();
@@ -253,6 +253,30 @@ static int genIFAST(struct ASTnode *n) {
   return (NOREG);  
 }
 
+static int genWHILE(struct ASTnode *n) {
+  int Lstart, Lend;
+
+  Lstart = label();
+  Lend = label();
+
+  // set start label and evaluate condition
+  // genAST recognises the A_WHILE operator and generates the jump to end
+  cglabel(Lstart);
+  genAST(n->left, Lend, n->op);
+  freeall_registers();
+
+  // evaluate body of while loop
+  genAST(n->right, NOREG, n->op);
+  freeall_registers();
+
+  // jump back to start of while loop and make end label
+  // this is in the body of the assembly code for the while loop.
+  cgjump(Lstart);
+  cglabel(Lend);
+
+  return (NOREG);  
+}
+
 // Given an AST, generate
 // assembly code recursively
 static int genAST(struct ASTnode *n, int reg, int parentASTop) {
@@ -266,7 +290,10 @@ static int genAST(struct ASTnode *n, int reg, int parentASTop) {
     switch (n->op) {
       case A_IF:
         printf("generating IF assembly code\n");
-        return (genIFAST(n));
+        return (genIF(n));
+      case A_WHILE:
+        printf("generating WHILE assembly code\n");
+        return (genWHILE(n));
       case A_GLUE:
         printf("generating for glued AST nodes\n");
         genAST(n->left, NOREG, n->op);
@@ -297,8 +324,8 @@ static int genAST(struct ASTnode *n, int reg, int parentASTop) {
       case A_GT:
       case A_LE:
       case A_GE:
-        if (parentASTop == A_IF) {
-          printf("generating comparison for IF statement\n");
+        if (parentASTop == A_IF || parentASTop == A_WHILE) {
+          printf("generating comparison for IF or WHILE statement\n");
           return (cgcompare_and_jump(n->op, leftreg, rightreg, reg));
         }
         else {
