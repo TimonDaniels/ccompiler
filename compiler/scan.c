@@ -109,6 +109,10 @@ static int keyword(char *s) {
       if (!strcmp(s, "while"))
         return (T_WHILE);
       break;
+    case 'f':
+      if (!strcmp(s, "for"))
+        return (T_FOR);
+      break;
     case 'p':
       if (!strcmp(s, "print"))
         return (T_PRINT);

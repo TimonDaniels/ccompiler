@@ -1,4 +1,4 @@
-.text
+	.text
 .LC0:
 	.string	"%d\n"
 printint:
@@ -10,12 +10,13 @@ printint:
 	movl	%eax, %esi
 	leaq	.LC0(%rip), %rdi
 	movl	$0, %eax
-	call	printf
+	call	printf@PLT
 	nop
 	leave
 	ret
 
 	.globl	main
+	.type	main, @function
 main:
 	pushq	%rbp
 	movq	%rsp, %rbp
