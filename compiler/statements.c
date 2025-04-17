@@ -22,12 +22,15 @@ struct ASTnode* print_statement(FILE *file, struct CurChar *curChar, struct Toke
   // generate the assembly code
   tree = binaryExpression(file, curChar, token, 0);
 
-  lefttype = P_INT; righttype = tree->type;
-  if (!type_compatible(&lefttype, &righttype, 1))
+  lefttype = P_INT;
+  righttype = tree->type;
+  if (!type_compatible(&lefttype, &righttype, 0))
     fatal("Incompatible types in print statement");
 
   if (righttype)
-    tree = mkastnode(righttype, P_INT, tree, NULL, NULL, 0);
+    tree = mkastnode(A_PRINT, P_NONE, tree, NULL, NULL, 0);
+
+  tree = mkastnode(A_PRINT, P_NONE, tree, NULL, NULL, 0);
 
   return (tree);
 }
@@ -61,7 +64,7 @@ struct ASTnode* assignment_statement(FILE *file, struct CurChar *curChar, struct
     left = mkastnode(lefttype, right->type, left, NULL, NULL, 0);
 
   // Make an assignment AST tree
-  tree = mkastnode(A_ASSIGN, lefttype, left, NULL, right, 0);
+  tree = mkastnode(A_ASSIGN, P_INT, left, NULL, right, 0);
 
   return (tree);
 }
@@ -158,6 +161,7 @@ struct ASTnode* single_statement(FILE *file, struct CurChar *curChar, struct Tok
     case T_PRINT:
       printf("found print statement\n");
       return (print_statement(file, curChar, token));
+    case T_CHAR:
     case T_INT:
       printf("found variable declaration\n");
       var_declaration(file, curChar, token);
