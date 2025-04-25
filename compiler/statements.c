@@ -28,7 +28,7 @@ struct ASTnode* print_statement(FILE *file, struct CurChar *curChar, struct Toke
     fatal("Incompatible types in print statement");
 
   if (righttype)
-    tree = mkastnode(A_PRINT, P_NONE, tree, NULL, NULL, 0);
+    tree = mkastnode(righttype, P_NONE, tree, NULL, NULL, 0);
 
   tree = mkastnode(A_PRINT, P_NONE, tree, NULL, NULL, 0);
 

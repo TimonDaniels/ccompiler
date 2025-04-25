@@ -52,9 +52,10 @@ struct ASTnode *getNextIntNode(FILE *file, struct CurChar *curChar, struct Token
     case T_INTLIT:
         if ((token->value) >= 0 && (token->value) <= 255)
             left = mkastleaf(A_INTLIT, P_CHAR, token->value);
-        else
+        else {
             printf("Integer literal out of range\n");
             left = mkastleaf(A_INTLIT, P_INT, token->value);
+        }
         break;
     case T_IDENT:
         // Check that this identifier exists

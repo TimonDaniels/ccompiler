@@ -32,4 +32,4 @@ int type_compatible(int *left, int *right, int onlyright) {
   // Anything remaining is compatible
   *left = *right = 0;
   return (1);
-  }
+}

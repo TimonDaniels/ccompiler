@@ -47,9 +47,9 @@ struct ASTnode *binaryExpression(FILE *file, struct CurChar *curChar, struct Tok
 
         // Widen either side if required. type vars are A_WIDEN now
         if (lefttype)
-            left = mkastnode(lefttype, right->type, NULL, NULL, left, 0);
+            left = mkastnode(lefttype, right->type, left, NULL, NULL, 0);
         if (righttype)
-            right = mkastnode(righttype, left->type, NULL, NULL, right, 0);
+            right = mkastnode(righttype, left->type, right, NULL, NULL, 0);
         
         // join subtrees together
         left = mkastnode(getNodeType(tokentype), left->type, left, NULL, right, 0);

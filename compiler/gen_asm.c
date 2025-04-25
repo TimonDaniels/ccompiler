@@ -290,11 +290,6 @@ static int genWHILE(struct ASTnode *n) {
 // Given an AST, generate
 // assembly code recursively
 static int genAST(struct ASTnode *n, int reg, int parentASTop) {
-    if (n == NULL) {
-      printf("NULL AST node passed to genAST\n");
-      exit(0);
-    }
-
     int leftreg, rightreg;
 
     switch (n->op) {
@@ -368,9 +363,11 @@ static int genAST(struct ASTnode *n, int reg, int parentASTop) {
         cgprintint(leftreg);
         freeall_registers();
         return (NOREG);
+      case A_WIDEN:
+        // Widen the child's type to the parent's type
+        return (cgwiden(leftreg, n->left->type, n->type));
       default:
-        fprintf(stderr, "Unknown AST operator %d\n", n->op);
-        exit(1);
+        fatald("Unknown AST operation", n->op);
     }
 }
 
