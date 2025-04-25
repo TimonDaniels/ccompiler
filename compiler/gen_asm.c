@@ -42,32 +42,63 @@ static void free_register(int reg)
   freereg[reg]= 1;
 }
 
-// Print out the assembly preamble
+// // Linux version:
+// // Print out the assembly preamble
+// void cgpreamble() {
+//   freeall_registers();
+//   fputs("\t.text\n"
+// 	".LC0:\n"
+// 	"\t.string\t\"%d\\n\"\n"
+// 	"printint:\n"
+// 	"\tpushq\t%rbp\n"
+// 	"\tmovq\t%rsp, %rbp\n"
+// 	"\tsubq\t$16, %rsp\n"
+// 	"\tmovl\t%edi, -4(%rbp)\n"
+// 	"\tmovl\t-4(%rbp), %eax\n"
+//   "\tmovl\t%eax, %esi\n"
+//   	"\tleaq\t.LC0(%rip), %rdi\n"
+// 	"\tmovl	$0, %eax\n"
+// 	"\tcall	printf@PLT\n" "\tnop\n" "\tleave\n" "\tret\n" "\n", Outfile);
+// }
+
+// Windows version:
 void cgpreamble() {
   freeall_registers();
   fputs("\t.text\n"
-	".LC0:\n"
-	"\t.string\t\"%d\\n\"\n"
-	"printint:\n"
-	"\tpushq\t%rbp\n"
-	"\tmovq\t%rsp, %rbp\n"
-	"\tsubq\t$16, %rsp\n"
-	"\tmovl\t%edi, -4(%rbp)\n"
-	"\tmovl\t-4(%rbp), %eax\n"
-	"\tmovl\t%eax, %esi\n"
-	"\tleaq	.LC0(%rip), %rdi\n"
-	"\tmovl	$0, %eax\n"
-	"\tcall	printf@PLT\n" "\tnop\n" "\tleave\n" "\tret\n" "\n", Outfile);
+    ".LC0:\n"
+    "\t.string\t\"%d\\n\"\n"
+    "printint:\n"
+    "\tpushq\t%rbp\n"
+    "\tmovq\t%rsp, %rbp\n"
+    "\tsubq\t$48, %rsp\n"        // 32 bytes shadow space + 16 bytes for local vars
+    "\tmovq\t%rcx, 32(%rsp)\n"   // Save first parameter
+    "\tmovq\t32(%rsp), %rdx\n"   // Move to second parameter register
+    "\tleaq\t.LC0(%rip), %rcx\n" // Format string in first parameter
+    "\tcall\tprintf\n"
+    "\tmovq\t$0, %rax\n"         // Return 0
+    "\taddq\t$48, %rsp\n"        // Clean up stack
+    "\tpopq\t%rbp\n"
+    "\tret\n"
+    "\n", Outfile);
 }
 
 // Print out a function preamble
 void cgfuncpreamble(char *name) {
+  // Linux version:
+  // fprintf(Outfile,
+	//   "\t.text\n"
+	//   "\t.globl\t%s\n"
+	//   "\t.type\t%s, @function\n"
+	//   "%s:\n" "\tpushq\t%%rbp\n"
+	//   "\tmovq\t%%rsp, %%rbp\n", name, name, name);
+
+  // Windows version:
   fprintf(Outfile,
-	  "\t.text\n"
-	  "\t.globl\t%s\n"
-	  "\t.type\t%s, @function\n"
-	  "%s:\n" "\tpushq\t%%rbp\n"
-	  "\tmovq\t%%rsp, %%rbp\n", name, name, name);
+    "\t.text\n"
+    "\t.globl\t%s\n"
+    "%s:\n"
+    "\tpushq\t%%rbp\n"
+    "\tmovq\t%%rsp, %%rbp\n", name, name);
 }
 
 // Print out a function postamble
@@ -159,10 +190,21 @@ int cgdiv(int r1, int r2) {
   return(r1);
 }
 
+// // Linux version:
 // Call printint() with the given register
+// void cgprintint(int r) {
+//   fprintf(Outfile, "\tmovq\t%s, %%rcx\n", reglist[r]);
+//   fprintf(Outfile, "\tcall\tprintint\n");
+//   free_register(r);
+// }
+
+// Windows version:
 void cgprintint(int r) {
-  fprintf(Outfile, "\tmovq\t%s, %%rdi\n", reglist[r]);
+  // Allocate shadow space before the call
+  fprintf(Outfile, "\tsubq\t$32, %%rsp\n");          // Allocate shadow space
+  fprintf(Outfile, "\tmovq\t%s, %%rcx\n", reglist[r]);
   fprintf(Outfile, "\tcall\tprintint\n");
+  fprintf(Outfile, "\taddq\t$32, %%rsp\n");          // Clean up shadow space
   free_register(r);
 }
 
