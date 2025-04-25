@@ -55,11 +55,11 @@ void main(int argc, char *argv[])
     lexScan(Infile, &curChar, &token);
     
     printf("Generating assembly code...\n");
-    cgpreamble();                                              // Output the preamble
-    while (1) {                                                 // Parse a function and
-      rootnode = function_declaration(Infile, &curChar, &token);  // generate the assembly code for it
-      genAST(rootnode, NOREG, 0);                               // generate the assembly code for it
-      if (token.type == T_EOF)                                 // Stop when we have reached EOF
+    cgpreamble();                                                   // Output the preamble
+    while (1) {                                                     // Parse a function and
+      rootnode = function_declaration(Infile, &curChar, &token);    // generate the assembly code for it
+      genAST(rootnode, NOREG, 0);                                   // generate the assembly code for it
+      if (token.type == T_EOF)                                      // Stop when we have reached EOF
         break;
     }
 

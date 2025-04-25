@@ -43,6 +43,9 @@ struct ASTnode* assignment_statement(FILE *file, struct CurChar *curChar, struct
   // Ensure we have an identifier
   ident(file, curChar, token);
 
+  if (token->type == T_LPAREN)
+    return (funccall(file, curChar, token));
+
   // Check it's been defined then make a leaf node for it
   if ((id = findglob(Text)) == -1) {
     printf("Undeclared variable %s", Text);

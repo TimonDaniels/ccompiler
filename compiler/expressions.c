@@ -1,6 +1,11 @@
+#ifndef EXPRESSIONS_C
+#define EXPRESSIONS_C
+
 #include "scan.c"
 #include "parse.c"
 #include "types.c"
+
+
 
 // maps 1 to 1 with the enum nodetypes
 static int operatorPrecedense[] = {
@@ -65,3 +70,5 @@ struct ASTnode *binaryExpression(FILE *file, struct CurChar *curChar, struct Tok
 
     return (left);
 }
+
+#endif // EXPRESSIONS_C

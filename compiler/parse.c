@@ -41,6 +41,27 @@ struct ASTnode *mkastleaf(int op, int type, int intvalue)
     return (mkastnode(op, type, NULL, NULL, NULL, intvalue));
 }
 
+struct ASTnode *binaryExpression(FILE *file, struct CurChar *curChar, struct Token *token, int prec);
+
+struct ASTnode* funccall(FILE *file, struct CurChar *curChar, struct Token *token) {
+    struct ASTnode *tree;
+    int id;
+  
+    id = findglob(Text);
+    if (id == -1) {
+      fatals("Undeclared function %s", Text);
+    }
+  
+    lparen(file, curChar, token);
+  
+    tree = binaryExpression(file, curChar, token, 0);
+  
+    tree = mkastnode(A_FUNCCALL, Gsym[id].type, tree, NULL, NULL, id);
+    rparen(file, curChar, token);
+  
+    return (tree);
+}
+
 struct ASTnode *getNextIntNode(FILE *file, struct CurChar *curChar, struct Token *token)
 {
     // assumes the next token is scanned and of type INT
@@ -58,6 +79,17 @@ struct ASTnode *getNextIntNode(FILE *file, struct CurChar *curChar, struct Token
         }
         break;
     case T_IDENT:
+        // This could be a variable or a function call.
+        // Scan in the next token to find out
+        lexScan(file, curChar, token);
+
+        // It's a '(', so a function call
+        if (token->type == T_LPAREN)
+            return (funccall(file, curChar, token));
+
+        // Not a function call, so reject the new token
+        reject_token(token);
+
         // Check that this identifier exists
         id = findglob(Text);
         if (id == -1)

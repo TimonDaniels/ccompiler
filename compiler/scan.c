@@ -129,107 +129,125 @@ static int keyword(char *s) {
   return (0);
 }
 
+// A pointer to a rejected token
+static struct Token *Rejtoken = NULL;
+
+// Reject the token that we just scanned
+void reject_token(struct Token *t) {
+  if (Rejtoken != NULL)
+    fatal("Can't reject token twice");
+  Rejtoken = t;
+}
+
 int lexScan(FILE *file, struct CurChar *curChar, struct Token *token)
 {   
-    int tokentype;
-    skipChars(file, curChar);
+  int tokentype;
 
-    // check the character type
-    switch (curChar->type)
-    {
-    case EOF:
-        token->type = T_EOF;
-        return 0;
-    case '+':
-        token->type = T_PLUS;
-        break;
-    case '-':
-        token->type = T_MINUS;
-        break;
-    case '*':
-        token->type = T_STAR;
-        break;
-    case '/':
-        token->type = T_SLASH;
-        break;
-    case ';':
-        token->type = T_SEMI;
-        break;
-    case '{':
-      token->type = T_LBRACE;
+  if (Rejtoken != NULL) {
+    // If we have a rejected token, return it
+    token = Rejtoken;
+    Rejtoken = NULL;
+    return (1);
+  }
+
+  skipChars(file, curChar);
+
+  // check the character type
+  switch (curChar->type)
+  {
+  case EOF:
+      token->type = T_EOF;
+      return 0;
+  case '+':
+      token->type = T_PLUS;
       break;
-    case '}':
-      token->type = T_RBRACE;
+  case '-':
+      token->type = T_MINUS;
       break;
-    case '(':
-      token->type = T_LPAREN;
+  case '*':
+      token->type = T_STAR;
       break;
-    case ')':
-      token->type = T_RPAREN;
+  case '/':
+      token->type = T_SLASH;
       break;
-    case '=':
-      nextc(file, curChar);
-      if ((curChar->type) == '=') {
-        token->type = T_EQ;
-      } else {
-        Putback = curChar->type;
-        token->type = T_ASSIGN;
+  case ';':
+      token->type = T_SEMI;
+      break;
+  case '{':
+    token->type = T_LBRACE;
+    break;
+  case '}':
+    token->type = T_RBRACE;
+    break;
+  case '(':
+    token->type = T_LPAREN;
+    break;
+  case ')':
+    token->type = T_RPAREN;
+    break;
+  case '=':
+    nextc(file, curChar);
+    if ((curChar->type) == '=') {
+      token->type = T_EQ;
+    } else {
+      Putback = curChar->type;
+      token->type = T_ASSIGN;
+    }
+    break;
+  case '!':
+    nextc(file, curChar);
+    if ((curChar->type) == '=') {
+      token->type = T_NE;
+    } else {
+      fatalc("Unrecognised character", curChar->type);
+    }
+    break;
+  case '<':
+    nextc(file, curChar);
+    if ((curChar->type) == '=') {
+      token->type = T_LE;
+    } else {
+      Putback = curChar->type;
+      token->type = T_LT;
+    }
+    break;
+  case '>':
+    nextc(file, curChar);
+    if ((curChar->type) == '=') {
+      token->type = T_GE;
+    } else {
+      Putback = curChar->type;
+      token->type = T_GT;
+    }
+    break;
+  default:
+    // If it's a digit, scan the
+    // literal integer value in
+    if (isdigit(curChar->type)) {
+      token->value = scanInt(file, curChar);
+      token->type = T_INTLIT;
+      break;
+      } 
+    else if (isalpha(curChar->type) || '_' == curChar->type) {
+      // Read in a keyword or identifier
+      scanident(file, curChar, Text, TEXTLEN);
+  
+      // If it's a recognised keyword, return that token
+      tokentype = keyword(Text);
+      if (tokentype) {
+        token->type = tokentype;
+        break;
       }
-      break;
-    case '!':
-      nextc(file, curChar);
-      if ((curChar->type) == '=') {
-        token->type = T_NE;
-      } else {
-        fatalc("Unrecognised character", curChar->type);
+      // Else it's an identifier, return T_IDENT
+      token->type = T_IDENT;
+      break;        
       }
-      break;
-    case '<':
-      nextc(file, curChar);
-      if ((curChar->type) == '=') {
-        token->type = T_LE;
-      } else {
-        Putback = curChar->type;
-        token->type = T_LT;
-      }
-      break;
-    case '>':
-      nextc(file, curChar);
-      if ((curChar->type) == '=') {
-        token->type = T_GE;
-      } else {
-        Putback = curChar->type;
-        token->type = T_GT;
-      }
-      break;
-    default:
-      // If it's a digit, scan the
-      // literal integer value in
-      if (isdigit(curChar->type)) {
-        token->value = scanInt(file, curChar);
-        token->type = T_INTLIT;
-        break;
-        } 
-      else if (isalpha(curChar->type) || '_' == curChar->type) {
-        // Read in a keyword or identifier
-        scanident(file, curChar, Text, TEXTLEN);
-    
-        // If it's a recognised keyword, return that token
-        tokentype = keyword(Text);
-        if (tokentype) {
-          token->type = tokentype;
-          break;
-        }
-        // Else it's an identifier, return T_IDENT
-        token->type = T_IDENT;
-        break;        
-        }
-        
-        // The character isn't part of any recognised token, error
-        printf("Unrecognised character %c on line %d\n", curChar->type, Line);
-        exit(1);
-      }
-    return 1;
+      
+      // The character isn't part of any recognised token, error
+      printf("Unrecognised character %c on line %d\n", curChar->type, Line);
+      exit(1);
+    }
+  return 1;
 }
 
 void match(FILE *file, struct CurChar *curChar, struct Token *token, int t, char *what) {
