@@ -16,8 +16,12 @@ static void init() {
     Putback = '\n';
 }
 
+static void usage(char *prog) {
+    fprintf(stderr, "Usage: %s infile\n", prog);
+    exit(1);
+}
 
-void main()
+void main(int argc, char *argv[])
 {
     // declare variables
     FILE *Infile;
@@ -25,13 +29,16 @@ void main()
     struct Token token;
     struct ASTnode *rootnode;
     
+    if (argc != 2)
+        usage(argv[0]);
+
     init();
 
     // open the file
-    Infile = fopen("code-1.txt", "r");
+    Infile = fopen(argv[1], "r");
     if (Infile == NULL)
     {
-        fprintf(stderr, "Error: file not found: %s\n", strerror(errno));
+        fprintf(stderr, "Error: file %s not found: %s\n", argv[1], strerror(errno));
         exit(1);
     }
 
