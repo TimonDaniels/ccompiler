@@ -12,7 +12,8 @@ for %%i in (input*) do (
     ) else (
         echo %%i
         ..\compiler.exe %%i > NUL 2>&1
-        gcc -o out.exe assembly.s
+        gcc -c -o out.o assembly.s
+        gcc -o out.exe out.o ..\compiler\lib\printint.c -e main
         out.exe > trial.%%i
         fc "out.%%i" "trial.%%i" > nul
         if errorlevel 1 (
@@ -22,6 +23,6 @@ for %%i in (input*) do (
         ) else (
             echo : OK
         )
-        del out.exe assembly.s "trial.%%i"
+        del out.exe out.o assembly.s "trial.%%i"
     )
 )
