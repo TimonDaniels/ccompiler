@@ -26,7 +26,7 @@ void var_declaration(FILE *file, struct CurChar *curChar, struct Token *token) {
     type = parse_type(token->type);
     lexScan(file, curChar, token);
     ident(file, curChar, token);
-    id = addglob(Text, type, S_VARIABLE);
+    id = addglob(Text, type, S_VARIABLE, 0);
     cgglobsym(id);
     semi(file, curChar, token);
 }
@@ -35,21 +35,36 @@ struct ASTnode* compound_statement(FILE *file, struct CurChar *curChar, struct T
 
 // Parse the declaration of a simplistic function
 struct ASTnode *function_declaration(FILE *file, struct CurChar *curChar, struct Token *token) {
-  struct ASTnode *tree;
-  int nameslot;
+  struct ASTnode *tree, *finalstmt;
+  int nameslot, type, endlabel;
+
+  type = parse_type(token->type);
+  lexScan(file, curChar, token);
+  ident(file, curChar, token);
 
   // Find the 'void', the identifier, and the '(' ')'.
   // For now, do nothing with them
-  match(file, curChar, token, T_VOID, "void");
-  ident(file, curChar, token);
-  nameslot = addglob(Text, P_VOID, S_FUNCTION);
+  endlabel = label();
+  nameslot = addglob(Text, type, S_FUNCTION, endlabel);
+  Functionid = nameslot;
+
+  // scan the '(' and ')' tokens
   lparen(file, curChar, token);
   rparen(file, curChar, token);
 
   // Get the AST tree for the compound statement
   tree = compound_statement(file, curChar, token);
 
+  // If the function type isn't P_VOID, check that
+  // the last AST operation in the compound statement
+  // was a return statement
+  if (type != P_VOID) {
+    finalstmt = (tree->op == A_GLUE) ? tree->right : tree;
+    if (finalstmt == NULL || finalstmt->op != A_RETURN)
+      fatal("No return for function with non-void type");
+  }
+
   // Return an A_FUNCTION node which has the function's nameslot
   // and the compound statement sub-tree
-  return (mkastnode(A_FUNCTION, P_VOID, tree, NULL, NULL, nameslot));
+  return (mkastnode(A_FUNCTION, type, tree, NULL, NULL, nameslot));
 }

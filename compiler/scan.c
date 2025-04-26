@@ -124,6 +124,9 @@ static int keyword(char *s) {
     case 'p':
       if (!strcmp(s, "print"))
         return (T_PRINT);
+    case 'r':
+      if (!strcmp(s, "return"))
+        return (T_RETURN);
       break;
   }
   return (0);

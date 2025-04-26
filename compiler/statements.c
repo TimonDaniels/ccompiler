@@ -72,6 +72,34 @@ struct ASTnode* assignment_statement(FILE *file, struct CurChar *curChar, struct
   return (tree);
 }
 
+struct ASTnode* return_statement(FILE *file, struct CurChar *curChar, struct Token *token) {
+  struct ASTnode* tree;
+  int function_type;
+
+  if (Gsym[Functionid].type == P_VOID){
+    fatal("Cannot return from a void function");
+  }
+
+  match(file, curChar, token, T_RETURN, "return");
+  lparen(file, curChar, token);
+  function_type = Gsym[Functionid].type;
+
+  tree = binaryExpression(file, curChar, token, 0);
+  rparen(file, curChar, token);
+
+  if (!type_compatible(&tree->type, &function_type, 1))
+    fatal("Incompatible types");
+
+  // if type_compatible did set the left tree to A_WIDEN, we need to make a A_WIDEN node
+  if (tree->type);
+    tree = mkastnode(tree->type, function_type, tree, NULL, NULL, 0);
+
+  // return a A_RETURN node
+  tree = mkastnode(A_RETURN, function_type, tree, NULL, NULL, 0);
+
+  return (tree);
+}
+
 // Parse an IF statement including
 // any optional ELSE clause
 // and return its AST

@@ -78,8 +78,9 @@ enum {
 // Symbol table structure
 struct symtable {
   char *name;
-  int type;			 // primitive type of the symbol
-  int stype;     // structural type of the symbol
+  int type;			  // primitive type of the symbol
+  int stype;      // structural type of the symbol
+  int endlabel;   // label for the end of the function
 };
 
 #endif // DEFS_H
