@@ -122,7 +122,7 @@ int cgloadglob(int id) {
 
   switch (Gsym[id].type) {
     case P_INT:
-      fprintf(Outfile, "\tmovzbl\t%s(\%%rip), %s\n", Gsym[id].name, reglist[r]);
+      fprintf(Outfile, "\tmovzbl\t%s(\%%rip), %s\n", Gsym[id].name, dreglist[r]);
       break;
     case P_CHAR:
       fprintf(Outfile, "\tmovzbq\t%s(\%%rip), %s\n", Gsym[id].name, reglist[r]);
