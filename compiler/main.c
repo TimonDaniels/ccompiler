@@ -50,6 +50,9 @@ void main(int argc, char *argv[])
         exit(1);
     }
 
+    // For now, ensure that void printint() is defined
+    addglob("printint", P_CHAR, S_FUNCTION, 0);
+
     // read the file
     printf("Reading the file...\n");
     lexScan(Infile, &curChar, &token);
