@@ -48,7 +48,7 @@ struct ASTnode *binaryExpression(FILE *file, struct CurChar *curChar, struct Tok
         lefttype = left->type;
         righttype = right->type;
         if (!type_compatible(&lefttype, &righttype, 0))
-        fatal("Incompatible types");
+            fatal("Incompatible types");
 
         // Widen either side if required. type vars are A_WIDEN now
         if (lefttype)

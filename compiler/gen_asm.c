@@ -61,6 +61,16 @@ static void free_register(int reg)
 // 	"\tcall	printf@PLT\n" "\tnop\n" "\tleave\n" "\tret\n" "\n", Outfile);
 // }
 
+// Generate a label
+void cglabel(int l) {
+  fprintf(Outfile, "L%d:\n", l);
+}
+
+// Generate a jump to a label
+void cgjump(int l) {
+  fprintf(Outfile, "\tjmp\tL%d\n", l);
+}
+
 // Windows version:
 void cgpreamble() {
   freeall_registers();
@@ -87,7 +97,8 @@ void cgfuncpreamble(char *name) {
 }
 
 // Print out a function postamble
-void cgfuncpostamble() {
+void cgfuncpostamble(int id) {
+  cglabel(Gsym[id].endlabel);
   fputs("\tpopq	%rbp\n" "\tret\n", Outfile);
 }
 
@@ -221,16 +232,6 @@ int cglessthan(int r1, int r2) { return(cgcompare(r1, r2, "setl")); }
 int cggreaterthan(int r1, int r2) { return(cgcompare(r1, r2, "setg")); }
 int cglessequal(int r1, int r2) { return(cgcompare(r1, r2, "setle")); }
 int cggreaterequal(int r1, int r2) { return(cgcompare(r1, r2, "setge")); }
-
-// Generate a label
-void cglabel(int l) {
-  fprintf(Outfile, "L%d:\n", l);
-}
-
-// Generate a jump to a label
-void cgjump(int l) {
-  fprintf(Outfile, "\tjmp\tL%d\n", l);
-}
 
 // List of comparison instructions,
 // in AST order: A_EQ, A_NE, A_LT, A_GT, A_LE, A_GE
@@ -402,7 +403,7 @@ static int genAST(struct ASTnode *n, int reg, int parentASTop) {
         printf("generating for function %s\n", Gsym[n->v.id].name);
         cgfuncpreamble(Gsym[n->v.id].name);
         genAST(n->left, NOREG, n->op);
-        cgfuncpostamble();
+        cgfuncpostamble(n->v.id);
         return (NOREG);
     }
 
