@@ -91,7 +91,7 @@ struct ASTnode* return_statement(FILE *file, struct CurChar *curChar, struct Tok
     fatal("Incompatible types");
 
   // if type_compatible did set the left tree to A_WIDEN, we need to make a A_WIDEN node
-  if (return_type);
+  if (return_type)
     tree = mkastnode(return_type, function_type, tree, NULL, NULL, 0);
 
   // return a A_RETURN node
