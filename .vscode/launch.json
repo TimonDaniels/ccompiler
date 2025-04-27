@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/compiler/main.exe",
-            "args": [],
+            "args": ["${workspaceFolder}/tests/input11"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/compiler",
             "environment": [],

@@ -13,8 +13,8 @@ clean:
 test: $(EXE)
 	cd tests && runtests.bat
 
-test14n: $(EXE) tests\input10 compiler\lib\printint.c
-	$(EXE) tests\input10
+test11n: $(EXE) tests\input11 compiler\lib\printint.c
+	$(EXE) tests\input11
 	gcc -c -o out.o assembly.s
 	gcc -o out.exe out.o compiler\lib\printint.c
 	.\out.exe
