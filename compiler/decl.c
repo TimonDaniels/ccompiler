@@ -11,6 +11,8 @@ int parse_type(int t) {
       return (P_CHAR);
     case T_VOID:
       return (P_VOID);
+    case T_LONG:
+      return (P_LONG);
     default:
       fatald("Invalid type", t);
   }

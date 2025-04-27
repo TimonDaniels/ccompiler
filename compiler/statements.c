@@ -74,7 +74,7 @@ struct ASTnode* assignment_statement(FILE *file, struct CurChar *curChar, struct
 
 struct ASTnode* return_statement(FILE *file, struct CurChar *curChar, struct Token *token) {
   struct ASTnode* tree;
-  int function_type;
+  int function_type, return_type;
 
   if (Gsym[Functionid].type == P_VOID){
     fatal("Cannot return from a void function");
@@ -82,21 +82,22 @@ struct ASTnode* return_statement(FILE *file, struct CurChar *curChar, struct Tok
 
   match(file, curChar, token, T_RETURN, "return");
   lparen(file, curChar, token);
-  function_type = Gsym[Functionid].type;
 
   tree = binaryExpression(file, curChar, token, 0);
-  rparen(file, curChar, token);
 
-  if (!type_compatible(&tree->type, &function_type, 1))
+  return_type = tree->type;
+  function_type = Gsym[Functionid].type;
+  if (!type_compatible(&return_type, &function_type, 1))
     fatal("Incompatible types");
 
   // if type_compatible did set the left tree to A_WIDEN, we need to make a A_WIDEN node
-  if (tree->type);
-    tree = mkastnode(tree->type, function_type, tree, NULL, NULL, 0);
+  if (return_type);
+    tree = mkastnode(return_type, function_type, tree, NULL, NULL, 0);
 
   // return a A_RETURN node
-  tree = mkastnode(A_RETURN, function_type, tree, NULL, NULL, 0);
+  tree = mkastnode(A_RETURN, P_NONE, tree, NULL, NULL, 0);
 
+  rparen(file, curChar, token);
   return (tree);
 }
 
@@ -194,6 +195,7 @@ struct ASTnode* single_statement(FILE *file, struct CurChar *curChar, struct Tok
       return (print_statement(file, curChar, token));
     case T_CHAR:
     case T_INT:
+    case T_LONG:
       printf("found variable declaration\n");
       var_declaration(file, curChar, token);
       return (NULL);
@@ -209,7 +211,9 @@ struct ASTnode* single_statement(FILE *file, struct CurChar *curChar, struct Tok
     case T_FOR:
       printf("found for statement\n");
       return (for_statement(file, curChar, token));
-
+    case T_RETURN:
+      printf("found return statement\n");
+      return (return_statement(file, curChar, token));
     default:
       fatald("Syntax error, token", token->type);
   }
@@ -227,7 +231,8 @@ struct ASTnode* compound_statement(FILE *file, struct CurChar *curChar, struct T
 
     tree = single_statement(file, curChar, token);
 
-    if (tree != NULL && (tree->op == A_PRINT || tree->op == A_ASSIGN)) {
+    if (tree != NULL && (tree->op == A_PRINT || tree->op == A_ASSIGN || 
+      tree->op == A_RETURN || tree->op == A_FUNCCALL)) {
       semi(file, curChar, token);
     }
 
