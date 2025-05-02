@@ -33,7 +33,7 @@ struct ASTnode *binaryExpression(FILE *file, struct CurChar *curChar, struct Tok
     int lefttype, righttype;
     int current_precedense;
 
-    left = getNextIntNode(file, curChar, token);
+    left = prefix(file, curChar, token);
     tokentype = token->type;
     if (tokentype == T_SEMI || tokentype == T_RPAREN)
         return (left);

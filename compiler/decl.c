@@ -3,19 +3,33 @@
 #include "scan.c"
 #include "symbols.c"
 
-int parse_type(int t) {
-  switch (t) {
-    case T_INT:
-      return (P_INT);
-    case T_CHAR:
-      return (P_CHAR);
-    case T_VOID:
-      return (P_VOID);
-    case T_LONG:
-      return (P_LONG);
+int parse_type(FILE *file, struct CurChar *curChar, struct Token *token) {
+  int type;
+
+  switch (token->type) {
+    case T_INT: {
+      type = P_INT; break;
+      }
+    case T_CHAR: {
+      type = P_CHAR; break;
+      }
+    case T_VOID: {
+      type = P_VOID; break;
+      }
+    case T_LONG: { 
+      type = P_LONG; break;
+      }
     default:
-      fatald("Invalid type", t);
+      fatald("Invalid type", token->type);
   }
+
+  while (1) {
+    lexScan(file, curChar, token);
+    if (token->type != T_STAR) break;
+    type = pointer_to(type);
+  }
+
+  return (type);
 }
 
 // Parse the declaration of a variable
@@ -25,8 +39,7 @@ void var_declaration(FILE *file, struct CurChar *curChar, struct Token *token) {
     // Ensure we have an 'int' token followed by an identifier
     // and a semicolon. Text now has the identifier's name.
     // Add it as a known identifier
-    type = parse_type(token->type);
-    lexScan(file, curChar, token);
+    type = parse_type(file, curChar, token);
     ident(file, curChar, token);
     id = addglob(Text, type, S_VARIABLE, 0);
     cgglobsym(id);
@@ -40,8 +53,7 @@ struct ASTnode *function_declaration(FILE *file, struct CurChar *curChar, struct
   struct ASTnode *tree, *finalstmt;
   int nameslot, type, endlabel;
 
-  type = parse_type(token->type);
-  lexScan(file, curChar, token);
+  type = parse_type(file, curChar, token);
   ident(file, curChar, token);
 
   // Find the 'void', the identifier, and the '(' ')'.

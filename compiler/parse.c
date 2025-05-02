@@ -1,5 +1,6 @@
 #include "defs.h"
 #include "symbols.c"
+#include "types.c"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -105,3 +106,46 @@ struct ASTnode *getNextIntNode(FILE *file, struct CurChar *curChar, struct Token
     lexScan(file, curChar, token);
     return left;
 }
+
+// Parse a prefix expression and return 
+// a sub-tree representing it.
+struct ASTnode *prefix(FILE *file, struct CurChar *curChar, struct Token *token) {
+    struct ASTnode *tree;
+
+    switch (token->type) {
+      case T_AMPER:
+        // Get the next token and parse it
+        // recursively as a prefix expression
+        lexScan(file, curChar, token);
+        tree = getNextIntNode(file, curChar, token);
+  
+        // Ensure that it's an identifier
+        if (tree->op != A_IDENT)
+          fatal("& operator must be followed by an identifier");
+  
+        // Now change the operator to A_ADDR and the type to
+        // a pointer to the original type
+        tree->op = A_ADDR; 
+        tree->type = pointer_to(tree->type);
+        break;
+
+      case T_STAR:
+        // Get the next token and parse it
+        // recursively as a prefix expression
+        lexScan(file, curChar, token);
+        tree = getNextIntNode(file, curChar, token);
+  
+        // For now, ensure it's either another deref or an
+        // identifier
+        if (tree->op != A_IDENT && tree->op != A_DEREF)
+          fatal("* operator must be followed by an identifier or *");
+  
+        // Prepend an A_DEREF operation to the tree
+        tree = mkastnode(A_DEREF, value_at(tree->type), tree, NULL, NULL, 0);
+        break;
+
+      default:
+        tree = getNextIntNode(file, curChar, token);
+    }
+    return (tree);
+  }

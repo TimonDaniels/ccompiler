@@ -192,6 +192,15 @@ int lexScan(FILE *file, struct CurChar *curChar, struct Token *token)
   case ')':
     token->type = T_RPAREN;
     break;
+  case '&':
+    nextc(file, curChar);
+    if ((curChar->type) == '&') {
+      token->type = T_LOGAND;
+    } else {
+      Putback = curChar->type;
+      token->type = T_AMPER;
+    }
+    break;
   case '=':
     nextc(file, curChar);
     if ((curChar->type) == '=') {
